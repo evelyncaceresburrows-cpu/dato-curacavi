@@ -45,18 +45,19 @@ export async function crearSolicitud(
     return { ok: true, id: `demo-${Date.now()}`, modo: "demo" };
   }
 
-  const { data, error } = await supabase
+  // No usamos .select() después del insert: la RLS de SELECT solo permite
+  // admin/editor leer solicitudes, así que `Prefer: return=representation`
+  // falla con violación de RLS. El UI no necesita el ID generado por la DB.
+  const { error } = await supabase
     .from("solicitudes")
-    .insert({ ...payload, estado: "pendiente" })
-    .select("id")
-    .single();
+    .insert({ ...payload, estado: "pendiente" });
 
   if (error) {
     console.error("[Dato Curacaví] error creando solicitud:", error);
     return { ok: false, error: error.message, modo: "supabase" };
   }
 
-  return { ok: true, id: data?.id, modo: "supabase" };
+  return { ok: true, id: undefined, modo: "supabase" };
 }
 
 // ─── Legacy compat (socio/membresías pendientes) ────────────────────────────
