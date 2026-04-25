@@ -1,0 +1,253 @@
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,500;1,600&family=DM+Serif+Display:ital@0;1&family=Inter:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700;800&family=Dancing+Script:wght@600;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*  ───────────────────────────────────────────────────────
+    Tipografía del valle
+    · Playfair Display — elegancia de etiqueta de Dulces Issa
+    · Inter / Geist — datos técnicos y UI moderna
+    ─────────────────────────────────────────────────────── */
+
+:root {
+  font-family: "Montserrat", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: #222222;
+}
+
+html,
+body {
+  background-color: #F7F3ED; /* Arena */
+  min-height: 100%;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  position: relative;
+  z-index: 1;
+}
+
+/*  ───────────────────────────────────────────────────────
+    Custom classes Design System Oficial
+    ─────────────────────────────────────────────────────── */
+@layer components {
+  /* Botón primario - Verde Bosque */
+  .btn-bosque {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-bosque-600 px-5 py-3.5 font-mont text-[15px] font-semibold text-white transition-all;
+    box-shadow: 0 10px 24px -8px rgba(31, 107, 69, 0.45);
+  }
+  .btn-bosque:hover {
+    @apply bg-bosque-700;
+    transform: translateY(-1px);
+  }
+  .btn-bosque:active {
+    transform: translateY(0);
+  }
+
+  /* Ficha / tarjeta base oficial */
+  .ficha {
+    @apply relative overflow-hidden rounded-2xl border border-black/5 bg-white transition-all shadow-tarjeta;
+  }
+  .ficha:hover {
+    @apply shadow-elevada;
+    transform: translateY(-2px);
+  }
+
+  /* Search pill oficial */
+  .search-pill {
+    @apply flex w-full items-center gap-3 rounded-2xl border border-black/5 bg-white px-4 py-3.5 text-[15px] text-humo shadow-tarjeta;
+  }
+  .search-pill input {
+    @apply flex-1 bg-transparent outline-none placeholder:text-humo;
+  }
+
+
+  /* ───────────────────────────────────────────────────────
+     Clases del design system MOBILE (/app)
+     Tipografía Montserrat, fondo arena suave, iPhone-style.
+     ─────────────────────────────────────────────────────── */
+
+  /* Marco iPhone real (usado solo en el preview desktop) */
+  .iphone-frame {
+    @apply relative mx-auto overflow-hidden bg-white;
+    width: 390px;
+    min-height: 844px;
+    border-radius: 46px;
+    box-shadow: 0 0 0 10px #111, 0 30px 80px -20px rgba(0, 0, 0, 0.5);
+  }
+  .iphone-notch {
+    @apply pointer-events-none absolute left-1/2 top-2 z-50 -translate-x-1/2;
+    width: 120px;
+    height: 32px;
+    background: #000;
+    border-radius: 20px;
+  }
+
+  /* Shell mobile sin marco (full width en móvil real) */
+  .mobile-shell {
+    @apply mx-auto min-h-screen w-full max-w-[430px] bg-arena font-mont text-carbon;
+  }
+
+  /* Superficie primaria de tarjetas mobile */
+  .surface-card {
+    @apply rounded-2xl bg-white shadow-tarjeta;
+  }
+  .surface-card-lg {
+    @apply rounded-3xl bg-white shadow-elevada;
+  }
+
+  /* Chip básico */
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-full border border-bosque-100 bg-white px-3 py-1 text-[12px] font-semibold text-humo transition-colors;
+  }
+  .chip-active {
+    @apply border-bosque-600 bg-bosque-600 text-white;
+  }
+
+  /* Botón primario mobile */
+  .btn-bosque {
+    @apply inline-flex items-center justify-center gap-2 rounded-2xl bg-bosque-600 px-5 py-3.5 font-mont text-[15px] font-semibold text-white transition-all;
+    box-shadow: 0 10px 24px -8px rgba(31, 107, 69, 0.45);
+  }
+  .btn-bosque:hover {
+    @apply bg-bosque-700;
+    transform: translateY(-1px);
+  }
+  .btn-bosque:active {
+    transform: translateY(0);
+  }
+
+  /* Botón outline mobile */
+  .btn-outline {
+    @apply inline-flex items-center justify-center gap-2 rounded-2xl border border-bosque-600 bg-white px-5 py-3 font-mont text-[15px] font-semibold text-bosque-600 transition-colors;
+  }
+  .btn-outline:hover {
+    @apply bg-bosque-50;
+  }
+
+  /* Form Input Oficial */
+  .form-input {
+    @apply w-full rounded-2xl border border-bosque-600/10 bg-white px-5 py-4 font-mont text-[15px] font-medium text-carbon outline-none transition-all placeholder:text-humo/60;
+    box-shadow: 0 4px 12px -2px rgba(31, 107, 69, 0.04);
+  }
+  .form-input:focus {
+    @apply border-bosque-600 ring-4 ring-bosque-600/5;
+    background-color: #fff;
+  }
+
+  /* Search pill oficial */
+
+  /* Quick access circular (Explora Curacaví) */
+  .quick-circle {
+    @apply flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-white shadow-tarjeta;
+  }
+
+  /* Cápsula fecha (Agenda) */
+  .date-cap {
+    @apply flex w-[52px] shrink-0 flex-col items-center rounded-2xl border border-black/5 bg-white py-2 text-center transition-colors;
+  }
+  .date-cap-active {
+    @apply border-bosque-600 bg-bosque-600 text-white;
+  }
+
+  /* Tab bar inferior iOS-style — fixed en mobile real, sticky dentro del marco iPhone */
+  .tab-bar {
+    @apply pointer-events-none sticky bottom-0 z-30 mx-auto w-full max-w-[430px] px-4 pb-4 pt-6;
+    background: linear-gradient(to top, rgba(247,243,237,0.95) 60%, rgba(247,243,237,0));
+  }
+  .tab-bar-inner {
+    @apply pointer-events-auto relative flex items-end justify-between rounded-[28px] border border-black/5 bg-white/95 px-5 py-2.5 shadow-nav backdrop-blur;
+  }
+  .tab-item {
+    @apply flex flex-1 flex-col items-center gap-0.5 py-2 text-[11px] font-semibold text-humo transition-colors;
+  }
+  .tab-item-active {
+    @apply text-bosque-600;
+  }
+  .tab-fab {
+    @apply -mt-8 flex h-14 w-14 items-center justify-center rounded-full bg-bosque-600 text-white shadow-cta transition-transform;
+    border: 3px solid #fff;
+  }
+  .tab-fab:active {
+    transform: scale(0.96);
+  }
+
+  /* Cursiva tagline "Todo lo que buscas, está aquí." */
+  .tagline {
+    font-family: "Dancing Script", "Playfair Display", cursive;
+    font-weight: 600;
+    font-style: italic;
+  }
+
+  /* Sello circular "Calidad del Valle" */
+  .sello-circular {
+    @apply relative flex h-20 w-20 items-center justify-center rounded-full text-center;
+    background: radial-gradient(circle at 30% 30%, #FEF7E8, #FDE4C1);
+    color: #78350F;
+    border: 1.5px solid rgba(120, 53, 15, 0.5);
+    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.8),
+      inset 0 0 0 3px rgba(120, 53, 15, 0.3),
+      0 4px 14px -4px rgba(120, 53, 15, 0.25);
+  }
+  .sello-circular::before {
+    content: "";
+    position: absolute;
+    inset: 4px;
+    border-radius: 9999px;
+    border: 1px dashed rgba(120, 53, 15, 0.4);
+  }
+}
+
+@layer utilities {
+  /* Utilidad de realce ámbar para "Lo más buscado" */
+  .realce-ambar {
+    background: radial-gradient(
+      circle at 50% 0%,
+      rgba(217, 119, 6, 0.12),
+      transparent 70%
+    );
+  }
+
+  /* ── Animaciones del Concierge ───────────────────────────── */
+  .animate-in {
+    animation-fill-mode: both;
+  }
+
+  .slide-in-from-top-2 {
+    animation: slideInFromTop 0.25s ease-out;
+  }
+
+  .slide-in-from-bottom-2 {
+    animation: slideInFromBottom 0.25s ease-out;
+  }
+
+  .duration-300 {
+    animation-duration: 300ms;
+  }
+
+  @keyframes slideInFromTop {
+    from {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slideInFromBottom {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}

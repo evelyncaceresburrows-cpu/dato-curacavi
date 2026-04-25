@@ -1,0 +1,44 @@
+{
+  "name": "Dato Curacaví",
+  "short_name": "Dato Curacaví",
+  "description": "La guía vecinal del valle de Curacaví.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f5efe3",
+  "theme_color": "#1F6B45",
+  "lang": "es-CL",
+  "icons": [
+    {
+      "src": "/images/logo-oficial.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/images/logo-oficial.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["lifestyle", "travel", "food"],
+  "shortcuts": [
+    {
+      "name": "Directorio",
+      "short_name": "Directorio",
+      "url": "/directorio"
+    },
+    {
+      "name": "Agenda",
+      "short_name": "Agenda",
+      "url": "/agenda"
+    },
+    {
+      "name": "Publicar",
+      "short_name": "Publicar",
+      "url": "/publicar"
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# Bloqueamos rutas internas que no aportan SEO
+Disallow: /app/
+Disallow: /concierge
+
+Sitemap: https://datocuracavi.cl/sitemap.xml

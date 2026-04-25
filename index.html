@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="es-CL">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#1F6B45" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Dato Curacaví" />
+    <meta name="mobile-web-app-capable" content="yes" />
+
+    <!-- Primary SEO -->
+    <title>Dato Curacaví — La guía vecinal del valle</title>
+    <meta
+      name="description"
+      content="La guía vecinal oficial de Curacaví. Picadas, ferias, chicha, alojamientos, trámites y eventos del valle, ordenados al tiro."
+    />
+    <meta name="keywords" content="Curacaví, valle, picadas, chicha, dulces, Ambrosio O'Higgins, eventos, emprendimientos, Región Metropolitana" />
+    <meta name="author" content="Dato Curacaví" />
+    <meta name="robots" content="index,follow" />
+    <link rel="canonical" href="https://datocuracavi.cl/" />
+    <meta name="geo.region" content="CL-RM" />
+    <meta name="geo.placename" content="Curacaví" />
+    <meta name="geo.position" content="-33.4069;-71.1459" />
+    <meta name="ICBM" content="-33.4069, -71.1459" />
+
+    <!-- CSP fallback (los headers de Vercel son la fuente canónica) -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https: https://*.supabase.co; connect-src 'self' https://*.supabase.co https://plausible.io; base-uri 'self'; form-action 'self';"
+    />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Dato Curacaví" />
+    <meta property="og:locale" content="es_CL" />
+    <meta property="og:title" content="Dato Curacaví — La guía vecinal del valle" />
+    <meta property="og:description" content="Picadas, chicha, dulces y eventos de Curacaví, verificados por la comunidad." />
+    <meta property="og:url" content="https://datocuracavi.cl/" />
+    <meta property="og:image" content="https://datocuracavi.cl/images/og-cover.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Dato Curacaví — La guía vecinal del valle" />
+    <meta name="twitter:description" content="Picadas, chicha, dulces y eventos de Curacaví, verificados por la comunidad." />
+    <meta name="twitter:image" content="https://datocuracavi.cl/images/og-cover.png" />
+
+    <!-- Icons & PWA -->
+    <link rel="icon" type="image/png" href="/images/logo-oficial.png" />
+    <link rel="apple-touch-icon" href="/images/logo-oficial.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+
+    <!-- Performance: preconnect + preload crítico -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap"
+      media="print"
+      onload="this.media='all'"
+    />
+    <noscript
+      ><link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap"
+    /></noscript>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

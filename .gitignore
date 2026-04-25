@@ -1,0 +1,37 @@
+# Node / Vite
+node_modules
+dist
+.vite
+.vite-cache
+/tmp-cache
+
+# Vite config timestamp artifacts (generados por HMR)
+vite.config.ts.timestamp-*.mjs
+vite.config.ts.timestamp-*.js
+*.timestamp-*.mjs
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# Editor / SO
+.DS_Store
+.idea
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# Logs y caches de test
+coverage
+*.log
+.npm
+.eslintcache
+
+# Supabase
+supabase/.branches
+supabase/.temp
+supabase/config.toml.bak
+
+# Artifacts del preview single-file (no va al repo)
+dato-curacavi-preview.html
