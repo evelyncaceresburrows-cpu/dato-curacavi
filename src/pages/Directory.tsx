@@ -1,25 +1,46 @@
-import { useMemo, useState } from "react";
-import { useSearchParams, Link } from "react-router-dom";
-import {
-  Star,
-  Filter,
-  Search,
-} from "lucide-react";
+/**
+ * Directory — pantalla de búsqueda Dato 68 redesign C (mockup Claude Design).
+ *
+ * Estructura:
+ *   1. AppHeader title="Directorio" (mobile only — desktop usa NavBar global)
+ *   2. Search bar input controlado
+ *   3. Filter chips horizontales scrollables (Todos + categorías)
+ *   4. Counter "{n} lugar(es)"
+ *   5. Lista vertical de cards horizontales: foto + categoría + nombre + subtítulo + rating + status
+ *
+ * Mantiene: useComercios, useSearchParams (deep link cat=), analytics, SEO.
+ */
+import { useMemo, useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { Star, Search, Filter, MapPin } from "lucide-react";
 import {
   CATEGORIAS,
   CATEGORIAS_HOME_KEYS,
   categoriaDef,
   type Categoria,
+  type Comercio,
 } from "@/data/seed";
 import { useComercios } from "@/data/hooks/useComercios";
 import { SEO } from "@/components/SEO";
 import { track, Events } from "@/lib/analytics";
+import { AppHeader } from "@/components/lovable/AppHeader";
+import { StatusBadge } from "@/components/lovable/StatusBadge";
 
 export default function Directory() {
+  const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const initialCat = params.get("cat") ?? "todos";
-  const [query, setQuery] = useState(initialCat === "todos" ? "" : "");
+  const [query, setQuery] = useState("");
   const [selectedCat, setSelectedCat] = useState(initialCat);
+
+  // Sincroniza ?cat= en la URL para deep links / share.
+  useEffect(() => {
+    const next = new URLSearchParams(params);
+    if (selectedCat === "todos") next.delete("cat");
+    else next.set("cat", selectedCat);
+    setParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCat]);
 
   function handleCatChange(cat: string) {
     setSelectedCat(cat);
@@ -28,11 +49,20 @@ export default function Directory() {
 
   const { data: comercios = [] } = useComercios();
 
-  // Barra de chips: home primero, luego el resto (evitando duplicados).
-  const chipsCategorias = [
-    ...CATEGORIAS_HOME_KEYS.map((k) => categoriaDef(k)),
-    ...CATEGORIAS.filter((c) => !CATEGORIAS_HOME_KEYS.includes(c.key)),
-  ];
+  // Barra de chips: home primero, luego el resto.
+  // Filtramos categorías vacías (sin comercios publicados) para no mostrar
+  // chips que llevan a "0 lugares" → mejor UX, sin contenido falso.
+  const chipsCategorias = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const c of comercios) {
+      counts.set(c.categoria, (counts.get(c.categoria) ?? 0) + 1);
+    }
+    const orden = [
+      ...CATEGORIAS_HOME_KEYS.map((k) => categoriaDef(k)),
+      ...CATEGORIAS.filter((c) => !CATEGORIAS_HOME_KEYS.includes(c.key)),
+    ];
+    return orden.filter((c) => (counts.get(c.key) ?? 0) > 0);
+  }, [comercios]);
 
   const filtrados = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -47,159 +77,295 @@ export default function Directory() {
     });
   }, [selectedCat, query, comercios]);
 
-  void setParams; // reservado para futura persistencia del filtro
-
   const catLabel =
     selectedCat === "todos"
       ? "Explorar todos los lugares"
       : `Lugares · ${categoriaDef(selectedCat as Categoria).label}`;
 
   return (
-    <div className="mx-auto max-w-screen-xl px-4 md:px-12 py-8 md:py-16 bg-arena min-h-screen">
+    <div style={{ background: "var(--cream)" }} className="min-h-screen pb-32 md:pb-16">
       <SEO
-        title={`${catLabel} — Dato Curacaví`}
-        description="Directorio vecinal de Curacaví: picadas, chicha, dulces, alojamientos, servicios y trámites del valle."
+        title={`${catLabel} — Dato 68`}
+        description="Directorio vecinal del valle de Curacaví: picadas, viñas, panaderías, ferias y servicios verificados por la comunidad."
         path={selectedCat === "todos" ? "/directorio" : `/directorio?cat=${selectedCat}`}
       />
-      {/* ——— Header / Title ——— */}
-      <header className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="font-mont text-3xl font-extrabold text-carbon tracking-tight">
-            Explorar
-          </h1>
-          <p className="mt-1 text-[15px] font-medium text-humo">
-            Lo mejor de Curacaví en un solo lugar
-          </p>
-        </div>
-        <div className="flex gap-2">
-           <button className="flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-tarjeta text-carbon">
-             <Search size={20} />
-           </button>
-           <button className="flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-tarjeta text-carbon">
-             <Filter size={20} />
-           </button>
-        </div>
-      </header>
 
-      {/* ——— Categories Scroller ——— */}
-      <section className="mb-12 overflow-x-auto no-scrollbar pb-2">
-        <div className="flex gap-3">
-          <button
-            onClick={() => handleCatChange("todos")}
-            className={`whitespace-nowrap rounded-2xl px-6 py-3.5 text-[13px] font-extrabold transition-all ${
-              selectedCat === "todos"
-                ? "bg-bosque-600 text-white shadow-cta"
-                : "bg-white text-carbon shadow-tarjeta"
-            }`}
-          >
-            Todos
-          </button>
-          {chipsCategorias.map((c) => (
+      {/* Mobile-only header (desktop usa NavBar global) */}
+      <div className="md:hidden">
+        <AppHeader
+          title="Directorio"
+          action={
             <button
-              key={c.key}
-              onClick={() => handleCatChange(c.key)}
-              className={`flex items-center gap-2 whitespace-nowrap rounded-2xl px-6 py-3.5 text-[13px] font-extrabold transition-all ${
-                selectedCat === c.key
-                  ? "bg-bosque-600 text-white shadow-cta"
-                  : "bg-white text-carbon shadow-tarjeta"
-              }`}
+              type="button"
+              aria-label="Filtrar"
+              className="flex h-9 w-9 items-center justify-center rounded-full"
+              style={{
+                background: "var(--paper)",
+                border: "1px solid var(--border-soft)",
+                color: "var(--ink)",
+              }}
             >
-              <c.Icon size={16} />
-              {c.short}
+              <Filter size={16} strokeWidth={2} />
             </button>
-          ))}
-        </div>
-      </section>
-
-      {/* ——— Grid de Resultados ——— */}
-      <div className="grid gap-6 grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {filtrados.map((l) => (
-          <Link
-            key={l.id}
-            to={`/lugar/${l.slug}`}
-            className="flex flex-col gap-4 group"
-          >
-            <div className="relative aspect-square w-full rounded-3xl overflow-hidden shadow-tarjeta">
-               <div 
-                className="h-full w-full transition-transform duration-700 group-hover:scale-110"
-                style={{ background: l.imagen, backgroundSize: 'cover', backgroundPosition: 'center' }}
-              />
-              
-              {/* Badge "Sello de Calidad" logic based on rating */}
-              {l.rating >= 4.8 && (
-                <div className="absolute top-4 left-4">
-                   <div className="flex items-center gap-1.5 rounded-xl bg-bosque-600 px-3 py-2 shadow-cta">
-                      <Star size={12} fill="white" className="text-white" />
-                      <span className="text-[10px] font-bold text-white uppercase tracking-wider">
-                        Sello de Calidad
-                      </span>
-                   </div>
-                </div>
-              )}
-
-              {/* Rating overlay bottom right */}
-              <div className="absolute bottom-4 right-4">
-                 <div className="flex items-center gap-1.5 rounded-xl bg-white/95 px-3 py-2 shadow-tarjeta backdrop-blur">
-                    <Star size={12} fill="currentColor" className="text-amber-500" />
-                    <span className="text-[11px] font-bold text-carbon">
-                      {l.rating}
-                    </span>
-                 </div>
-              </div>
-            </div>
-
-            <div className="px-1">
-              <h3 className="font-mont text-lg font-extrabold text-carbon line-clamp-1 group-hover:text-bosque-600 transition-colors">
-                {l.nombre}
-              </h3>
-              <p className="mt-0.5 text-sm font-medium text-humo line-clamp-1">
-                {l.subtitulo} &middot; {l.precio}
-              </p>
-            </div>
-          </Link>
-        ))}
+          }
+        />
       </div>
 
-      {/* ——— No Results ——— */}
-      {filtrados.length === 0 && (
-        <div className="mt-20 text-center py-20 bg-white rounded-3xl shadow-tarjeta">
-           <div className="flex justify-center mb-6">
-              <div className="h-20 w-20 rounded-full bg-arena flex items-center justify-center text-humo">
-                 <Search size={40} />
-              </div>
-           </div>
-           <h3 className="font-mont text-xl font-extrabold text-carbon">
-              No encontramos resultados
-           </h3>
-           <p className="mt-2 text-humo font-medium">
-              Prueba con otra categoría o término de búsqueda.
-           </p>
-           <button 
-            onClick={() => {setSelectedCat("todos"); setQuery("");}}
-            className="mt-8 btn-bosque px-8 py-3"
-           >
-              Ver todos los lugares
-           </button>
+      <div className="mx-auto w-full max-w-2xl md:max-w-none md:px-6 md:pt-12" style={{ maxWidth: "100%" }}>
+        <div className="md:mx-auto" style={{ maxWidth: 1400 }}>
+        {/* ─── Search ────────────────────────────────────────────────── */}
+        <div className="px-5 pb-3.5 pt-1">
+          <div
+            className="flex items-center gap-2.5 rounded-2xl"
+            style={{
+              background: "var(--cream)",
+              border: "1.5px solid var(--border)",
+              padding: "12px 14px",
+            }}
+          >
+            <Search
+              size={18}
+              strokeWidth={2}
+              style={{ color: "var(--muted)" }}
+              aria-hidden
+            />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Buscar en el valle…"
+              aria-label="Buscar comercios"
+              className="font-inter-tight flex-1 bg-transparent outline-none"
+              style={{
+                fontSize: 14,
+                color: "var(--ink)",
+                border: "none",
+              }}
+            />
+          </div>
         </div>
-      )}
 
-      {/* ——— CTA Section ——— */}
-      <section className="mt-24 pb-20">
-         <div className="rounded-[40px] bg-carbon p-10 md:p-16 text-white relative overflow-hidden shadow-elevada">
-            <div className="absolute right-[-5%] top-[-10%] h-64 w-64 rounded-full bg-bosque-600/20 blur-3xl" />
-            <div className="relative z-10 max-w-2xl">
-               <h3 className="font-mont text-3xl md:text-4xl font-extrabold leading-tight">
-                  ¿Tu negocio aún no está en la guía?
-               </h3>
-               <p className="mt-4 text-arena/70 text-lg font-medium">
-                  Únete a la red de comercio local más grande de Curacaví y aumenta tu visibilidad.
-               </p>
-               <Link to="/socio" className="mt-10 inline-block bg-white text-carbon px-10 py-4 rounded-2xl font-bold hover:scale-105 active:scale-95 transition-transform">
-                  Empezar ahora
-               </Link>
+        {/* ─── Filter chips horizontales ─────────────────────────────── */}
+        <div className="no-scrollbar flex gap-2 overflow-x-auto px-5 pb-4">
+          <CategoryChipMockup
+            label="Todos"
+            active={selectedCat === "todos"}
+            onClick={() => handleCatChange("todos")}
+          />
+          {chipsCategorias.map((c) => (
+            <CategoryChipMockup
+              key={c.key}
+              label={c.short}
+              icon={<c.Icon size={14} strokeWidth={1.8} />}
+              active={selectedCat === c.key}
+              onClick={() => handleCatChange(c.key)}
+            />
+          ))}
+        </div>
+
+        {/* ─── Counter ───────────────────────────────────────────────── */}
+        <div
+          className="font-inter-tight px-5 pb-3"
+          style={{
+            fontSize: 12,
+            color: "var(--muted)",
+            fontWeight: 600,
+          }}
+        >
+          {filtrados.length} {filtrados.length === 1 ? "lugar" : "lugares"} · ordenado por relevancia
+        </div>
+
+        {/* ─── Lista vertical mobile / grid 2-col desktop ───────────── */}
+        <div className="px-5 pb-6 space-y-3 md:grid md:grid-cols-2 md:gap-5 md:space-y-0 lg:grid-cols-3 lg:gap-6">
+          {filtrados.map((c) => (
+            <ComercioRow
+              key={c.id}
+              comercio={c}
+              onClick={() => navigate(`/lugar/${c.slug}`)}
+            />
+          ))}
+        </div>
+
+        {/* ─── No results ────────────────────────────────────────────── */}
+        {filtrados.length === 0 && (
+          <div className="px-5 py-16 text-center">
+            <div
+              className="mx-auto flex h-16 w-16 items-center justify-center rounded-full"
+              style={{
+                background: "var(--paper)",
+                color: "var(--muted)",
+              }}
+            >
+              <Search size={32} strokeWidth={1.6} />
             </div>
-         </div>
-      </section>
+            <h3
+              className="font-fraunces mt-5"
+              style={{
+                fontSize: 22,
+                fontWeight: 500,
+                color: "var(--ink)",
+                letterSpacing: "-0.02em",
+              }}
+            >
+              Sin resultados
+            </h3>
+            <p
+              className="font-inter-tight mt-2"
+              style={{ fontSize: 14, color: "var(--muted)" }}
+            >
+              Probá con otra categoría o término.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedCat("todos");
+                setQuery("");
+              }}
+              className="font-inter-tight mt-6 rounded-xl"
+              style={{
+                background: "var(--valley)",
+                color: "var(--cream)",
+                padding: "12px 24px",
+                fontSize: 14,
+                fontWeight: 700,
+                border: "none",
+              }}
+            >
+              Ver todos los lugares
+            </button>
+          </div>
+        )}
+        </div>
+      </div>
     </div>
+  );
+}
+
+// ─── Subcomponentes locales ────────────────────────────────────────────
+
+function CategoryChipMockup({
+  label,
+  icon,
+  active,
+  onClick,
+}: {
+  label: string;
+  icon?: React.ReactNode;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className="font-inter-tight inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full"
+      style={{
+        padding: "8px 14px",
+        background: active ? "var(--valley)" : "var(--cream)",
+        color: active ? "var(--cream)" : "var(--ink)",
+        border: `1px solid ${active ? "var(--valley)" : "var(--border)"}`,
+        fontSize: 13,
+        fontWeight: 600,
+        letterSpacing: "-0.005em",
+      }}
+    >
+      {icon}
+      {label}
+    </button>
+  );
+}
+
+function ComercioRow({
+  comercio,
+  onClick,
+}: {
+  comercio: Comercio;
+  onClick: () => void;
+}) {
+  const cat = categoriaDef(comercio.categoria);
+  const isUrl =
+    comercio.imagen.startsWith("http") || comercio.imagen.startsWith("/");
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="lift block w-full overflow-hidden rounded-3xl text-left"
+      style={{
+        background: "var(--cream)",
+        border: "1px solid var(--border-soft)",
+        padding: 12,
+      }}
+    >
+      <div className="flex gap-3.5">
+        <div
+          className="shrink-0 overflow-hidden rounded-xl"
+          style={{
+            width: 88,
+            height: 88,
+            background: isUrl ? `url(${comercio.imagen}) center/cover` : comercio.imagen,
+          }}
+          aria-hidden
+        />
+        <div className="flex min-w-0 flex-1 flex-col justify-between">
+          <div>
+            <div
+              className="font-inter-tight uppercase"
+              style={{
+                fontSize: 10,
+                fontWeight: 700,
+                color: "var(--terracotta)",
+                letterSpacing: "0.08em",
+              }}
+            >
+              {cat.label}
+            </div>
+            <div
+              className="font-fraunces mt-0.5 line-clamp-1"
+              style={{
+                fontSize: 17,
+                fontWeight: 500,
+                color: "var(--ink)",
+                letterSpacing: "-0.02em",
+                lineHeight: 1.15,
+              }}
+            >
+              {comercio.nombre}
+            </div>
+            <div
+              className="font-inter-tight mt-1 line-clamp-2"
+              style={{ fontSize: 12, color: "var(--muted)", lineHeight: 1.35 }}
+            >
+              {comercio.subtitulo}
+            </div>
+          </div>
+          <div
+            className="font-inter-tight mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1"
+            style={{ fontSize: 11, color: "var(--muted)" }}
+          >
+            <span className="inline-flex items-center gap-1">
+              <Star
+                size={11}
+                style={{ color: "var(--sun)", fill: "var(--sun)" }}
+                aria-hidden
+              />
+              <span style={{ fontWeight: 700, color: "var(--ink)" }}>
+                {comercio.rating.toFixed(1)}
+              </span>
+            </span>
+            {comercio.distanciaKm !== undefined && (
+              <span className="inline-flex items-center gap-1">
+                <MapPin size={11} strokeWidth={1.8} aria-hidden />
+                {comercio.distanciaKm} km
+              </span>
+            )}
+            <StatusBadge
+              estado={comercio.abiertoHasta ? "abierto" : "cerrado"}
+              cierra={comercio.abiertoHasta}
+            />
+          </div>
+        </div>
+      </div>
+    </button>
   );
 }

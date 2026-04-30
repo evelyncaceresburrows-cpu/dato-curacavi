@@ -6,10 +6,12 @@
  * - Botón FAB en esquina inferior derecha (encima del tab bar mobile)
  * - Punto rojo pulsante cuando hay mensaje nuevo
  * - Panel desliza desde abajo con animación
- * - Se superpone correctamente sobre la nave bar
  * - Atajo de teclado: Ctrl+K (o Cmd+K) para abrir/cerrar
  *
- * Directivas operativas implementadas en el hook useConcierge.
+ * Estilos: paleta Dato 68 (cream / valley / terracotta) via CSS vars.
+ * Las clases tailwind antiguas (bg-crema, bg-parral-*, bg-tierra-*) fueron
+ * reemplazadas por inline styles con vars — ese era el bug del Concierge
+ * "transparente" tras el rebrand.
  */
 
 import { useState, useEffect, useRef } from "react";
@@ -20,7 +22,7 @@ import ConciergePanel from "./ConciergePanel";
 export default function FloatingConcierge() {
   const [abierto, setAbierto] = useState(false);
   const [tieneMensajeNuevo, setTieneMensajeNuevo] = useState(false);
-  const prevMensajesLen = useRef(1); // 1 = mensaje de bienvenida inicial
+  const prevMensajesLen = useRef(1);
 
   const {
     mensajes,
@@ -36,7 +38,6 @@ export default function FloatingConcierge() {
     limpiarChat,
   } = useConcierge();
 
-  // Notificación de mensaje nuevo cuando está cerrado
   useEffect(() => {
     const nuevoLen = mensajes.length;
     if (nuevoLen > prevMensajesLen.current && !abierto) {
@@ -45,12 +46,10 @@ export default function FloatingConcierge() {
     prevMensajesLen.current = nuevoLen;
   }, [mensajes, abierto]);
 
-  // Limpiar punto rojo al abrir
   useEffect(() => {
     if (abierto) setTieneMensajeNuevo(false);
   }, [abierto]);
 
-  // Atajo Ctrl+K / Cmd+K
   useEffect(() => {
     function handler(e: KeyboardEvent) {
       if ((e.ctrlKey || e.metaKey) && e.key === "k") {
@@ -67,50 +66,71 @@ export default function FloatingConcierge() {
 
   return (
     <>
-      {/* ── Backdrop (móvil) ───────────────────────────────────────────── */}
+      {/* Backdrop mobile */}
       {abierto && (
         <div
-          className="fixed inset-0 z-40 bg-black/20 backdrop-blur-[1px] md:hidden"
+          className="fixed inset-0 z-40 backdrop-blur-[1px] md:hidden"
+          style={{ background: "rgba(31,26,20,0.4)" }}
           onClick={() => setAbierto(false)}
           aria-hidden
         />
       )}
 
-      {/* ── Panel de chat ─────────────────────────────────────────────── */}
+      {/* Panel de chat */}
       <div
         className={`
-          fixed z-50 flex flex-col overflow-hidden
-          bg-crema shadow-2xl border border-tierra-200
+          fixed z-50 flex flex-col overflow-hidden rounded-2xl
           transition-all duration-300 ease-in-out
-          /* Mobile: panel desliza desde abajo */
-          bottom-[4.5rem] right-3 left-3 rounded-2xl
-          md:bottom-6 md:left-auto md:right-6 md:w-[380px] md:rounded-2xl
+          bottom-[4.5rem] right-3 left-3
+          md:bottom-6 md:left-auto md:right-6 md:w-[380px]
           ${abierto
             ? "opacity-100 translate-y-0 pointer-events-auto"
             : "opacity-0 translate-y-4 pointer-events-none"
           }
         `}
-        style={{ height: abierto ? undefined : 0, maxHeight: "75dvh" }}
+        style={{
+          background: "var(--cream)",
+          border: "1px solid var(--border)",
+          boxShadow: "0 24px 60px -16px rgba(31,26,20,0.35), 0 8px 24px -8px rgba(31,26,20,0.18)",
+          height: abierto ? undefined : 0,
+          maxHeight: "75dvh",
+        }}
         role="dialog"
         aria-label="Concierge del Valle"
         aria-modal="true"
       >
         {/* Header del panel */}
-        <div className="flex shrink-0 items-center gap-3 border-b border-tierra-100 bg-parral-700 px-4 py-3.5 text-crema">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-parral-600 ring-1 ring-white/20">
+        <div
+          className="flex shrink-0 items-center gap-3 px-4 py-3.5"
+          style={{
+            background: "var(--valley)",
+            color: "var(--cream)",
+            borderBottom: "1px solid rgba(31,26,20,0.2)",
+          }}
+        >
+          <div
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
+            style={{
+              background: "var(--valley-mid)",
+              boxShadow: "inset 0 0 0 1px rgba(245,240,230,0.2)",
+            }}
+          >
             <Leaf size={16} strokeWidth={1.8} />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="font-display text-sm font-bold leading-tight">
+            <p className="font-fraunces" style={{ fontSize: 15, fontWeight: 600, letterSpacing: "-0.015em", lineHeight: 1.1 }}>
               Concierge del Valle
             </p>
-            <p className="text-[11px] text-crema/70">
+            <p style={{ fontSize: 11, color: "rgba(245,240,230,0.7)" }}>
               Vecino · Curacaví · Siempre disponible
             </p>
           </div>
           <button
             onClick={() => setAbierto(false)}
-            className="shrink-0 rounded-full p-1.5 transition-colors hover:bg-parral-600"
+            className="shrink-0 rounded-full p-1.5 transition-colors"
+            style={{ color: "var(--cream)", background: "transparent", border: "none", cursor: "pointer" }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = "var(--valley-mid)")}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
             aria-label="Cerrar Concierge"
           >
             <ChevronDown size={18} strokeWidth={2} />
@@ -133,42 +153,50 @@ export default function FloatingConcierge() {
         />
       </div>
 
-      {/* ── Botón FAB ─────────────────────────────────────────────────── */}
+      {/* Botón FAB */}
       <button
         id="concierge-fab"
         onClick={() => setAbierto((prev) => !prev)}
-        className={`
-          fixed z-50 flex items-center gap-2
-          rounded-full shadow-xl transition-all duration-300
-          /* Mobile: encima del tab bar */
-          bottom-[5.25rem] right-4
-          /* Desktop: esquina libre */  
-          md:bottom-6 md:right-6
-          ${abierto
-            ? "bg-tierra-700 px-4 py-3 text-crema hover:bg-tierra-800"
-            : "bg-parral-700 px-5 py-3.5 text-crema hover:bg-parral-800 hover:shadow-2xl hover:-translate-y-0.5"
-          }
-        `}
+        className="fixed z-50 flex items-center gap-2 rounded-full transition-all duration-300 bottom-[5.25rem] right-4 md:bottom-6 md:right-6"
+        style={{
+          background: abierto ? "var(--terracotta)" : "var(--valley)",
+          color: "var(--cream)",
+          padding: abierto ? "12px 16px" : "14px 20px",
+          boxShadow: "0 16px 32px -8px rgba(31,26,20,0.35), 0 4px 12px rgba(31,26,20,0.15)",
+          border: "none",
+          cursor: "pointer",
+        }}
         aria-label={abierto ? "Cerrar Concierge" : "Abrir Concierge del Valle"}
         aria-expanded={abierto}
       >
         {/* Punto de notificación */}
         {tieneMensajeNuevo && !abierto && (
           <span className="absolute -right-1 -top-1 flex h-3.5 w-3.5">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
-            <span className="relative inline-flex h-3.5 w-3.5 rounded-full bg-red-500" />
+            <span
+              className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75"
+              style={{ background: "var(--terracotta)" }}
+            />
+            <span
+              className="relative inline-flex h-3.5 w-3.5 rounded-full"
+              style={{ background: "var(--terracotta-deep)" }}
+            />
           </span>
         )}
 
         {abierto ? (
           <>
             <X size={18} strokeWidth={2.5} />
-            <span className="text-sm font-semibold">Cerrar</span>
+            <span className="font-inter-tight" style={{ fontSize: 14, fontWeight: 600 }}>
+              Cerrar
+            </span>
           </>
         ) : (
           <>
             <Leaf size={18} strokeWidth={1.8} />
-            <span className="hidden text-sm font-semibold sm:block">
+            <span
+              className="font-inter-tight hidden sm:inline"
+              style={{ fontSize: 14, fontWeight: 600 }}
+            >
               Concierge del Valle
             </span>
           </>

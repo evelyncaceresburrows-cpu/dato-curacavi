@@ -460,7 +460,7 @@ function Exito({ nombre, onCerrar }: { nombre: string; onCerrar: () => void }) {
           ¡{nombre} está en lista!
         </p>
         <p className="mt-1 font-serif text-xs italic text-tierra-700">
-          El equipo de Dato Curacaví le contactará en las próximas 48 hrs para verificar y
+          El equipo de Dato 68 le contactará en las próximas 48 hrs para verificar y
           publicar su ficha en el directorio vecinal.
         </p>
       </div>

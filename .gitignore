@@ -35,3 +35,5 @@ supabase/config.toml.bak
 
 # Artifacts del preview single-file (no va al repo)
 dato-curacavi-preview.html
+
+.vercel

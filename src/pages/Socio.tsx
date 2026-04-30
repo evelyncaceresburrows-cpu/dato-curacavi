@@ -223,7 +223,7 @@ export default function Socio() {
           ¡Listo, vecino!
         </h2>
         <p className="mt-4 text-lg text-humo font-medium">
-          Recibimos tu solicitud. El equipo de Dato Curacaví revisará la
+          Recibimos tu solicitud. El equipo de Dato 68 revisará la
           información y te escribirá por WhatsApp para publicarla.
         </p>
         {done.modo === "demo" && (
@@ -250,47 +250,87 @@ export default function Socio() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-6 py-12">
+    <div
+      style={{ background: "var(--cream)" }}
+      className="mx-auto max-w-5xl px-6 py-12 pb-32 md:pb-16 min-h-screen"
+    >
       <SEO
-        title="Publicar en Dato Curacaví"
-        description="Súmate a la guía vecinal de Curacaví. Publica tu negocio o evento gratis; destaca con el plan Socio Pro."
+        title="Publicar en Dato 68"
+        description="Súmate a la guía vecinal del valle de Curacaví. Publica tu negocio o evento gratis; destaca con el plan Socio Pro."
         path="/publicar"
       />
-      {/* ——— Header ——— */}
+      {/* ——— Header editorial ——— */}
       <header className="text-center">
-        <span className="inline-flex rounded-lg bg-bosque-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-bosque-700">
+        <span
+          className="font-inter-tight inline-flex uppercase"
+          style={{
+            fontSize: 11,
+            fontWeight: 700,
+            letterSpacing: "0.22em",
+            color: "var(--terracotta)",
+            background: "transparent",
+          }}
+        >
           Piloto 2026 · Valle de Curacaví
         </span>
-        <h1 className="mt-6 font-mont text-4xl md:text-5xl font-extrabold text-carbon tracking-tight">
-          Súmate a la <span className="text-bosque-600">Guía</span>
+        <h1
+          className="font-fraunces mt-4"
+          style={{
+            fontSize: "clamp(36px, 6vw, 48px)",
+            fontWeight: 500,
+            letterSpacing: "-0.025em",
+            color: "var(--ink)",
+            lineHeight: 1.05,
+          }}
+        >
+          Súmate a la <em style={{ fontStyle: "italic", color: "var(--terracotta)" }}>guía</em>
         </h1>
-        <p className="mx-auto mt-4 max-w-2xl text-lg text-humo font-medium leading-relaxed">
+        <p
+          className="font-inter-tight mx-auto mt-4 max-w-2xl"
+          style={{
+            fontSize: 16,
+            color: "var(--muted)",
+            lineHeight: 1.55,
+          }}
+        >
           Publica tu negocio o evento y llega a miles de vecinos. La base es
           gratuita; el plan Socio Pro te deja destacar.
         </p>
       </header>
 
       {/* ——— Tab Switcher ——— */}
-      <div className="mt-12 flex justify-center">
-        <div className="flex rounded-2xl bg-white p-1.5 shadow-tarjeta border border-bosque-600/5">
+      <div className="mt-10 flex justify-center">
+        <div
+          className="flex rounded-2xl p-1.5"
+          style={{
+            background: "var(--paper)",
+            border: "1px solid var(--border-soft)",
+          }}
+        >
           <button
+            type="button"
             onClick={() => setActiveTab("negocio")}
-            className={`flex items-center gap-2 rounded-xl px-8 py-3 text-sm font-bold transition-all ${
-              activeTab === "negocio"
-                ? "bg-bosque-600 text-white shadow-cta"
-                : "text-humo hover:bg-bosque-50 hover:text-bosque-600"
-            }`}
+            className="font-inter-tight flex items-center gap-2 rounded-xl px-8 py-3 transition-all"
+            style={{
+              background: activeTab === "negocio" ? "var(--valley)" : "transparent",
+              color: activeTab === "negocio" ? "var(--cream)" : "var(--muted)",
+              fontSize: 14,
+              fontWeight: 700,
+            }}
           >
             <Store size={18} />
             Mi Negocio
           </button>
           <button
+            type="button"
             onClick={() => setActiveTab("evento")}
-            className={`flex items-center gap-2 rounded-xl px-8 py-3 text-sm font-bold transition-all ${
-              activeTab === "evento"
-                ? "bg-bosque-600 text-white shadow-cta"
-                : "text-humo hover:bg-bosque-50 hover:text-bosque-600"
-            }`}
+            className="font-inter-tight flex items-center gap-2 rounded-xl px-8 py-3 transition-all"
+            style={{
+              background: activeTab === "evento" ? "var(--valley)" : "transparent",
+              color: activeTab === "evento" ? "var(--cream)" : "var(--muted)",
+              fontSize: 14,
+              fontWeight: 700,
+            }}
           >
             <CalendarDays size={18} />
             Publicar Evento
@@ -299,17 +339,41 @@ export default function Socio() {
       </div>
 
       {/* ——— Form Section ——— */}
-      <div className="mt-12 overflow-hidden rounded-[40px] bg-white shadow-elevada border border-bosque-600/5">
+      <div
+        className="mt-10 overflow-hidden rounded-3xl"
+        style={{
+          background: "var(--paper)",
+          border: "1px solid var(--border-soft)",
+        }}
+      >
         <div className="p-8 md:p-12">
-          <div className="flex items-center gap-4 mb-10 pb-6 border-b border-bosque-600/5">
-            <div className="grid h-14 w-14 place-items-center rounded-2xl bg-bosque-50 text-bosque-600">
-              {activeTab === "negocio" ? <Store size={28} /> : <CalendarDays size={28} />}
+          <div
+            className="mb-8 flex items-center gap-4 pb-5"
+            style={{ borderBottom: "1px solid var(--border-soft)" }}
+          >
+            <div
+              className="grid h-12 w-12 place-items-center rounded-xl"
+              style={{ background: "var(--terracotta)", color: "var(--cream)" }}
+            >
+              {activeTab === "negocio" ? <Store size={22} /> : <CalendarDays size={22} />}
             </div>
             <div>
-              <h2 className="font-mont text-2xl font-bold text-carbon uppercase tracking-tight">
-                {activeTab === "negocio" ? "Datos del Negocio" : "Datos del Evento"}
+              <h2
+                className="font-fraunces"
+                style={{
+                  fontSize: 22,
+                  fontWeight: 500,
+                  color: "var(--ink)",
+                  letterSpacing: "-0.02em",
+                  margin: 0,
+                }}
+              >
+                {activeTab === "negocio" ? "Datos del negocio" : "Datos del evento"}
               </h2>
-              <p className="text-sm font-medium text-humo">
+              <p
+                className="font-inter-tight"
+                style={{ fontSize: 13, color: "var(--muted)", marginTop: 2 }}
+              >
                 Completa la ficha para empezar el proceso
               </p>
             </div>
@@ -624,7 +688,7 @@ export default function Socio() {
         <Beneficio
           Icon={CheckCircle2}
           titulo="Marca Oficial"
-          texto="El sello de Dato Curacaví genera confianza instantánea."
+          texto="El sello de Dato 68 genera confianza instantánea."
         />
         <Beneficio
           Icon={BarChart3}

@@ -135,7 +135,10 @@ export default function Ruta() {
   }, []);
 
   return (
-    <div className="mx-auto max-w-screen-xl px-4 md:px-12 pt-8 md:pt-16 pb-32 md:pb-16 bg-arena min-h-screen">
+    <div
+      style={{ background: "var(--cream)" }}
+      className="mx-auto max-w-screen-xl px-4 md:px-12 pt-8 md:pt-16 pb-32 md:pb-16 min-h-screen"
+    >
       <SEO
         title="Arma tu ruta — Ruta 68 a tu medida"
         description="Plan personalizado de Ruta 68: indícanos tiempo, presupuesto y tipo de panorama y te armamos un recorrido con paradas verificadas, de Santiago a Valparaíso."
@@ -143,13 +146,33 @@ export default function Ruta() {
       />
 
       <header className="mb-10">
-        <p className="text-bosque-600 font-bold uppercase tracking-widest text-xs">
+        <p
+          className="font-inter-tight uppercase"
+          style={{
+            color: "var(--terracotta)",
+            fontWeight: 700,
+            letterSpacing: "0.16em",
+            fontSize: 11,
+          }}
+        >
           Ruta 68 · Tu plan
         </p>
-        <h1 className="font-mont text-3xl md:text-4xl font-extrabold text-carbon tracking-tight mt-2">
-          Arma tu Ruta
+        <h1
+          className="font-fraunces mt-2"
+          style={{
+            fontSize: "clamp(32px, 5vw, 44px)",
+            fontWeight: 500,
+            letterSpacing: "-0.025em",
+            color: "var(--ink)",
+            lineHeight: 1.05,
+          }}
+        >
+          Arma tu <em style={{ fontStyle: "italic", color: "var(--terracotta)" }}>ruta</em>
         </h1>
-        <p className="mt-3 text-[15px] font-medium text-humo max-w-2xl">
+        <p
+          className="font-inter-tight mt-3 max-w-2xl"
+          style={{ fontSize: 15, color: "var(--muted)", lineHeight: 1.55 }}
+        >
           Decinos cuánto tiempo tenés, cuánto querés gastar y qué te
           gustaría hacer. Te armamos un plan con paradas verificadas a lo
           largo de la Ruta 68.
@@ -158,7 +181,13 @@ export default function Ruta() {
 
       <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
         {/* ——— Form ——— */}
-        <section className="rounded-3xl bg-white p-6 md:p-8 shadow-tarjeta">
+        <section
+          className="rounded-3xl p-6 md:p-8"
+          style={{
+            background: "var(--paper)",
+            border: "1px solid var(--border-soft)",
+          }}
+        >
           <div className="flex flex-col gap-6">
             {/* Origen */}
             <div>
@@ -172,11 +201,12 @@ export default function Ruta() {
                     type="button"
                     onClick={() => setOrigen(o)}
                     aria-pressed={origen === o}
-                    className={`rounded-2xl border-2 px-4 py-3 text-sm font-bold transition-all ${
-                      origen === o
-                        ? "border-bosque-600 bg-bosque-50 text-bosque-600"
-                        : "border-bosque-600/10 bg-white text-carbon"
-                    }`}
+                    className="font-inter-tight rounded-2xl border-2 px-4 py-3 text-sm font-bold transition-all"
+                    style={{
+                      borderColor: origen === o ? "var(--valley)" : "var(--border-soft)",
+                      background: origen === o ? "var(--valley)" : "var(--cream)",
+                      color: origen === o ? "var(--cream)" : "var(--ink)",
+                    }}
                   >
                     {o === "santiago" ? "Desde Santiago" : "Desde Valparaíso"}
                   </button>
@@ -196,11 +226,12 @@ export default function Ruta() {
                     type="button"
                     onClick={() => setDireccion(d)}
                     aria-pressed={direccion === d}
-                    className={`rounded-2xl border-2 px-3 py-2.5 text-sm font-bold capitalize transition-all ${
-                      direccion === d
-                        ? "border-bosque-600 bg-bosque-50 text-bosque-600"
-                        : "border-bosque-600/10 bg-white text-carbon"
-                    }`}
+                    className="font-inter-tight rounded-2xl border-2 px-3 py-2.5 text-sm font-bold capitalize transition-all"
+                    style={{
+                      borderColor: direccion === d ? "var(--valley)" : "var(--border-soft)",
+                      background: direccion === d ? "var(--valley)" : "var(--cream)",
+                      color: direccion === d ? "var(--cream)" : "var(--ink)",
+                    }}
                   >
                     {d}
                   </button>
@@ -226,7 +257,8 @@ export default function Ruta() {
                 onChange={(e) => setTiempoMin(Number(e.target.value))}
                 aria-label={`Tiempo total: ${fmtMin(tiempoMin)}`}
                 aria-valuetext={fmtMin(tiempoMin)}
-                className="mt-3 w-full accent-bosque-600"
+                className="mt-3 w-full"
+                style={{ accentColor: "var(--valley)" }}
               />
             </div>
 
@@ -248,7 +280,8 @@ export default function Ruta() {
                 onChange={(e) => setPresupuestoClp(Number(e.target.value))}
                 aria-label={`Presupuesto: ${fmtClp(presupuestoClp)}`}
                 aria-valuetext={fmtClp(presupuestoClp)}
-                className="mt-3 w-full accent-bosque-600"
+                className="mt-3 w-full"
+                style={{ accentColor: "var(--valley)" }}
               />
             </div>
 
@@ -269,7 +302,8 @@ export default function Ruta() {
                 value={maxParadas}
                 onChange={(e) => setMaxParadas(Number(e.target.value))}
                 aria-label={`Cantidad de paradas: ${maxParadas}`}
-                className="mt-3 w-full accent-bosque-600"
+                className="mt-3 w-full"
+                style={{ accentColor: "var(--valley)" }}
               />
             </div>
 
@@ -295,11 +329,12 @@ export default function Ruta() {
                           type="button"
                           onClick={() => toggleTag(t.id)}
                           aria-pressed={on}
-                          className={`rounded-full px-3 py-1.5 text-xs font-bold transition-all ${
-                            on
-                              ? "bg-bosque-600 text-white shadow-cta"
-                              : "bg-bosque-50 text-bosque-600 hover:bg-bosque-100"
-                          }`}
+                          className="font-inter-tight rounded-full px-3 py-1.5 text-xs font-bold transition-all"
+                          style={{
+                            background: on ? "var(--valley)" : "var(--cream)",
+                            color: on ? "var(--cream)" : "var(--ink)",
+                            border: `1px solid ${on ? "var(--valley)" : "var(--border)"}`,
+                          }}
                         >
                           {t.label}
                         </button>
@@ -352,7 +387,14 @@ export default function Ruta() {
           {resultado && resultado.paradas.length > 0 && (
             <div className="space-y-6">
               {/* Resumen */}
-              <div className="rounded-3xl bg-bosque-600 text-white p-6 shadow-cta">
+              <div
+                className="rounded-3xl p-6"
+                style={{
+                  background:
+                    "linear-gradient(135deg, var(--valley) 0%, var(--valley-mid) 100%)",
+                  color: "var(--cream)",
+                }}
+              >
                 <p className="text-[10px] font-bold uppercase tracking-widest text-arena/80">
                   Tu plan
                 </p>

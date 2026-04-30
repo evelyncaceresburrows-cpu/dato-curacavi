@@ -12,7 +12,7 @@ import Guardados from "./screens/Guardados";
 import Perfil from "./screens/Perfil";
 
 /**
- * Raíz de la experiencia mobile Dato Curacaví.
+ * Raíz de la experiencia mobile Dato 68.
  * Usa un state-router simple para no anidar BrowserRouter.
  * En desktop se envuelve en un PhoneFrame (iPhone).
  */

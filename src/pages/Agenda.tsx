@@ -1,151 +1,368 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import {
-  MapPin,
-  Clock,
-  Filter,
-  Plus,
-} from "lucide-react";
-import { FECHAS_AGENDA } from "@/data/seed";
+/**
+ * Agenda — pantalla de eventos Dato 68 redesign C (mockup Claude Design).
+ *
+ * Estructura:
+ *   1. AppHeader title="Agenda" + botón Publicar
+ *   2. Mini-calendario del mes con dots de eventos (lectura)
+ *   3. Filter chips (Todos / por categoría)
+ *   4. Lista de eventos con sello de fecha + título + lugar + hora + badge categoría
+ *
+ * Mantiene: useEventos, SEO, navegación a /evento/:slug.
+ */
+import { useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Plus, ChevronLeft, ChevronRight, Clock } from "lucide-react";
 import { useEventos } from "@/data/hooks/useEventos";
 import { SEO } from "@/components/SEO";
+import { AppHeader } from "@/components/lovable/AppHeader";
+
+type CategoriaEvento = "musica" | "gastro" | "cultura" | "deporte" | "naturaleza" | "tradicional";
+
+const ETIQUETA_CATEGORIA: Record<CategoriaEvento, string> = {
+  musica: "Música",
+  gastro: "Gastro",
+  cultura: "Cultura",
+  deporte: "Deporte",
+  naturaleza: "Naturaleza",
+  tradicional: "Tradición",
+};
+
+const FILTROS_AGENDA: { key: "todos" | CategoriaEvento; label: string; emoji: string }[] = [
+  { key: "todos", label: "Todos", emoji: "" },
+  { key: "musica", label: "Música", emoji: "🎵" },
+  { key: "gastro", label: "Gastro", emoji: "🍽️" },
+  { key: "cultura", label: "Cultura", emoji: "🎭" },
+  { key: "deporte", label: "Deporte", emoji: "⚽" },
+  { key: "naturaleza", label: "Naturaleza", emoji: "🌿" },
+  { key: "tradicional", label: "Tradición", emoji: "🇨🇱" },
+];
 
 export default function Agenda() {
-  const [selectedDateIdx, setSelectedDateIdx] = useState(0);
-
+  const navigate = useNavigate();
   const { data: eventos = [] } = useEventos();
-  // `useEventos` ya devuelve los eventos ordenados por fecha asc +
-  // Socio Pro primero dentro del mismo día; acá los consumimos tal cual.
-  const proximosEventos = eventos;
+  const [filtro, setFiltro] = useState<"todos" | CategoriaEvento>("todos");
+
+  const eventosFiltrados = useMemo(
+    () => (filtro === "todos" ? eventos : eventos.filter((e) => e.categoria === filtro)),
+    [eventos, filtro]
+  );
+
+  // Mes que mostramos en el mini-calendario: el del primer evento próximo (o hoy si no hay).
+  const refDate = eventos[0] ? new Date(eventos[0].fecha + "T00:00:00") : new Date();
+  const mesNombre = refDate.toLocaleDateString("es-CL", {
+    month: "long",
+    year: "numeric",
+  });
+  const mesUpper = mesNombre.charAt(0).toUpperCase() + mesNombre.slice(1);
+
+  const diasDelMes = new Date(
+    refDate.getFullYear(),
+    refDate.getMonth() + 1,
+    0
+  ).getDate();
+
+  const diasConEvento = useMemo(() => {
+    const set = new Set<number>();
+    eventos.forEach((e) => {
+      const d = new Date(e.fecha + "T00:00:00");
+      if (
+        d.getFullYear() === refDate.getFullYear() &&
+        d.getMonth() === refDate.getMonth()
+      ) {
+        set.add(d.getDate());
+      }
+    });
+    return set;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [eventos]);
 
   return (
-    <div className="mx-auto max-w-screen-xl px-4 md:px-12 py-8 md:py-16 bg-arena min-h-screen">
+    <div style={{ background: "var(--cream)" }} className="min-h-screen pb-32 md:pb-16">
       <SEO
-        title="Agenda Cultural de Curacaví"
+        title="Agenda Cultural — Dato 68"
         description="Panoramas, ferias, fiestas y eventos del valle de Curacaví. Qué hacer este fin de semana, hoy y los próximos días."
         path="/agenda"
       />
-      {/* ——— Header ——— */}
-      <header className="flex items-center justify-between">
-        <div>
-          <h1 className="font-mont text-3xl font-extrabold text-carbon tracking-tight">
-            Agenda Cultural
-          </h1>
-          <p className="mt-1 text-[15px] font-medium text-humo">
-            No te pierdas nada en Curacaví
-          </p>
-        </div>
-        <div className="flex gap-2">
-           <Link to="/socio?tab=evento" className="hidden md:flex h-12 items-center gap-2 rounded-2xl bg-bosque-600 px-6 font-bold text-white shadow-cta">
-             <Plus size={20} />
-             Publicar
-           </Link>
-           <button className="flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-tarjeta text-carbon">
-             <Filter size={20} />
-           </button>
-        </div>
-      </header>
 
-      {/* ——— Date Scroller ——— */}
-      <section className="mt-10 overflow-x-auto no-scrollbar pb-2">
-        <div className="flex gap-4">
-           {FECHAS_AGENDA.map((f, i) => (
-             <button 
-              key={`${f.dia}-${f.num}`}
-              onClick={() => setSelectedDateIdx(i)}
-              className={`flex flex-col items-center shrink-0 rounded-[24px] px-6 py-4 transition-all ${
-                i === selectedDateIdx ? "bg-bosque-600 text-white shadow-cta scale-105" : "bg-white text-carbon shadow-tarjeta hover:bg-bosque-50"
-              }`}
-             >
-               <span className={`text-[10px] font-bold uppercase tracking-widest ${i === selectedDateIdx ? "text-white/80" : "text-humo"}`}>{f.dia}</span>
-               <span className="text-2xl font-extrabold mt-0.5">{f.num}</span>
-             </button>
-           ))}
-        </div>
-      </section>
+      <div className="md:hidden">
+        <AppHeader
+          title="Agenda"
+          action={
+            <Link
+              to="/socio?tab=evento"
+              aria-label="Publicar evento"
+              className="flex h-9 w-9 items-center justify-center rounded-full"
+              style={{
+                background: "var(--terracotta)",
+                color: "var(--cream)",
+              }}
+            >
+              <Plus size={16} strokeWidth={2.4} />
+            </Link>
+          }
+        />
+      </div>
 
-      {/* ——— Contenido ——— */}
-      <section className="mt-16">
-        <div className="flex items-center justify-between mb-8">
-           <h2 className="font-mont text-xl font-extrabold text-carbon">
-              Qué hacer este fin de semana
-           </h2>
-        </div>
-
-        <div className="space-y-8">
-          {proximosEventos.map((e) => {
-            const d = new Date(e.fecha + "T00:00:00");
-            const diaSemana = d.toLocaleDateString("es-CL", { weekday: "short" }).toUpperCase();
-            const diaNum = d.getDate();
-
-            return (
-              <Link
-                key={e.id}
-                to={`/evento/${e.slug}`}
-                className="ficha block overflow-hidden bg-white shadow-tarjeta group cursor-pointer"
+      <div className="mx-auto w-full max-w-2xl px-5 pb-6 md:max-w-none md:px-6 md:pt-12">
+      <div className="md:mx-auto" style={{ maxWidth: 1400 }}>
+        {/* ─── Mini-calendario ───────────────────────────────────────── */}
+        <div
+          className="mb-5 rounded-3xl"
+          style={{
+            background: "var(--paper)",
+            border: "1px solid var(--border-soft)",
+            padding: "20px 18px",
+          }}
+        >
+          <div className="mb-4 flex items-center justify-between">
+            <h3
+              className="font-fraunces"
+              style={{
+                margin: 0,
+                fontSize: 19,
+                fontWeight: 500,
+                color: "var(--ink)",
+                letterSpacing: "-0.02em",
+              }}
+            >
+              {mesUpper}
+            </h3>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                aria-label="Mes anterior"
+                className="flex items-center justify-center rounded-lg"
+                style={{
+                  width: 32,
+                  height: 32,
+                  background: "var(--cream)",
+                  border: "1px solid var(--border-soft)",
+                }}
               >
-                <div className="flex flex-col md:flex-row">
-                  {/* Event Image */}
-                  <div className="relative h-64 md:h-auto md:w-80 shrink-0 overflow-hidden">
-                    <div 
-                      className="absolute inset-0 transition-transform duration-700 group-hover:scale-110"
-                      style={{ background: e.imagen, backgroundSize: 'cover', backgroundPosition: 'center' }}
+                <ChevronLeft size={14} strokeWidth={2.4} style={{ color: "var(--ink)" }} />
+              </button>
+              <button
+                type="button"
+                aria-label="Mes siguiente"
+                className="flex items-center justify-center rounded-lg"
+                style={{
+                  width: 32,
+                  height: 32,
+                  background: "var(--cream)",
+                  border: "1px solid var(--border-soft)",
+                }}
+              >
+                <ChevronRight size={14} strokeWidth={2.4} style={{ color: "var(--ink)" }} />
+              </button>
+            </div>
+          </div>
+          <div
+            className="grid gap-1"
+            style={{ gridTemplateColumns: "repeat(7, 1fr)" }}
+          >
+            {["D", "L", "M", "M", "J", "V", "S"].map((d, i) => (
+              <div
+                key={i}
+                className="font-inter-tight text-center"
+                style={{
+                  fontSize: 11,
+                  fontWeight: 600,
+                  color: "var(--muted)",
+                  padding: "4px 0",
+                }}
+              >
+                {d}
+              </div>
+            ))}
+            {Array.from({ length: diasDelMes }, (_, i) => i + 1).map((dia) => {
+              const tieneEvento = diasConEvento.has(dia);
+              return (
+                <button
+                  key={dia}
+                  type="button"
+                  className="relative flex items-center justify-center rounded-lg font-inter-tight"
+                  style={{
+                    aspectRatio: "1",
+                    background: tieneEvento ? "var(--valley)" : "transparent",
+                    color: tieneEvento ? "var(--cream)" : "var(--ink)",
+                    border: "none",
+                    fontSize: 13,
+                    fontWeight: tieneEvento ? 700 : 500,
+                  }}
+                >
+                  {dia}
+                  {tieneEvento && (
+                    <span
+                      aria-hidden
+                      className="absolute"
+                      style={{
+                        bottom: 2,
+                        left: "50%",
+                        transform: "translateX(-50%)",
+                        width: 3,
+                        height: 3,
+                        borderRadius: 999,
+                        background: "var(--sun)",
+                      }}
                     />
-                    {/* Date Tag Overlay */}
-                    <div className="absolute top-5 left-5 flex w-14 flex-col items-center rounded-2xl bg-white/95 py-2 text-center shadow-tarjeta backdrop-blur">
-                      <span className="text-[10px] font-bold text-bosque-700 leading-none">{diaSemana}</span>
-                      <span className="text-2xl font-extrabold text-carbon leading-none mt-1">{diaNum}</span>
-                    </div>
-                  </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
-                  {/* Event Content */}
-                  <div className="flex-1 p-8">
-                    <div className="flex items-center gap-2 mb-3">
-                       <span className="rounded-full bg-bosque-50 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-bosque-600">
-                          {e.categoria}
-                       </span>
-                    </div>
-                    
-                    <h3 className="font-mont text-2xl font-extrabold text-carbon leading-tight group-hover:text-bosque-600 transition-colors">
-                      {e.titulo}
-                    </h3>
-                    
-                    <p className="mt-4 text-humo font-medium leading-relaxed line-clamp-2">
-                      {e.descripcion}
-                    </p>
-
-                    <div className="mt-8 flex flex-wrap items-center gap-6">
-                       <div className="flex items-center gap-2 text-sm font-bold text-carbon">
-                          <Clock size={16} className="text-bosque-600" />
-                          {e.hora} hrs.
-                       </div>
-                       <div className="flex items-center gap-2 text-sm font-bold text-carbon">
-                          <MapPin size={16} className="text-bosque-600" />
-                          {e.lugar}
-                       </div>
-                    </div>
-                  </div>
-                </div>
-              </Link>
+        {/* ─── Filtros ───────────────────────────────────────────────── */}
+        <div className="no-scrollbar mb-5 flex gap-2 overflow-x-auto">
+          {FILTROS_AGENDA.map((f) => {
+            const active = filtro === f.key;
+            return (
+              <button
+                key={f.key}
+                type="button"
+                onClick={() => setFiltro(f.key)}
+                aria-pressed={active}
+                className="font-inter-tight inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full"
+                style={{
+                  padding: "8px 14px",
+                  background: active ? "var(--valley)" : "var(--cream)",
+                  color: active ? "var(--cream)" : "var(--ink)",
+                  border: `1px solid ${active ? "var(--valley)" : "var(--border)"}`,
+                  fontSize: 13,
+                  fontWeight: 600,
+                }}
+              >
+                {f.emoji && <span>{f.emoji}</span>}
+                {f.label}
+              </button>
             );
           })}
         </div>
-      </section>
 
-      {/* ——— CTA Section ——— */}
-      <section className="mt-20 pb-20 text-center">
-         <div className="max-w-lg mx-auto">
-            <h3 className="font-mont text-2xl font-extrabold text-carbon">
-               ¿Tienes un evento?
-            </h3>
-            <p className="mt-3 text-humo font-medium">
-               Aparece en la guía oficial y llega a toda la comunidad de Curacaví.
-            </p>
-            <Link to="/socio" className="mt-8 inline-block btn-bosque px-10 py-4">
-               Publicar mi evento
-            </Link>
-         </div>
-      </section>
+        {/* ─── Lista próximos ────────────────────────────────────────── */}
+        <h3
+          className="font-fraunces mb-3.5"
+          style={{
+            margin: 0,
+            fontSize: 19,
+            fontWeight: 500,
+            color: "var(--ink)",
+            marginBottom: 14,
+          }}
+        >
+          Próximos eventos
+        </h3>
+
+        {eventosFiltrados.length === 0 ? (
+          <div className="px-5 py-10 text-center">
+            <div style={{ fontSize: 48, marginBottom: 12 }}>📅</div>
+            <div className="font-inter-tight" style={{ fontSize: 15, color: "var(--muted)" }}>
+              No hay eventos de este tipo este mes.
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3 md:grid md:grid-cols-2 md:gap-5">
+            {eventosFiltrados.map((e, idx) => {
+              const d = new Date(e.fecha + "T00:00:00");
+              const mes = d
+                .toLocaleDateString("es-CL", { month: "short" })
+                .toUpperCase()
+                .replace(".", "");
+              const dia = d.getDate();
+              const destacado = idx === 0; // primer evento como destacado visual
+
+              return (
+                <button
+                  key={e.id}
+                  type="button"
+                  onClick={() => navigate(`/evento/${e.slug}`)}
+                  className="lift flex items-center gap-3.5 rounded-2xl text-left"
+                  style={{
+                    background: destacado ? "var(--valley)" : "var(--paper)",
+                    color: destacado ? "var(--cream)" : "var(--ink)",
+                    border: `1px solid ${destacado ? "var(--valley)" : "var(--border-soft)"}`,
+                    padding: "16px 18px",
+                  }}
+                >
+                  <div
+                    className="flex shrink-0 flex-col items-center justify-center rounded-xl"
+                    style={{
+                      width: 56,
+                      height: 64,
+                      background: destacado ? "var(--sun)" : "var(--cream)",
+                      color: destacado ? "var(--ink)" : "var(--valley)",
+                    }}
+                  >
+                    <div
+                      className="font-inter-tight"
+                      style={{
+                        fontSize: 9,
+                        fontWeight: 700,
+                        letterSpacing: "0.1em",
+                        opacity: 0.85,
+                      }}
+                    >
+                      {mes}
+                    </div>
+                    <div
+                      className="font-fraunces"
+                      style={{ fontSize: 26, fontWeight: 600, lineHeight: 1 }}
+                    >
+                      {dia}
+                    </div>
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <div
+                      className="font-inter-tight"
+                      style={{
+                        fontSize: 16,
+                        fontWeight: 700,
+                        lineHeight: 1.2,
+                        marginBottom: 4,
+                      }}
+                    >
+                      {e.titulo}
+                    </div>
+                    <div
+                      className="font-inter-tight"
+                      style={{ fontSize: 12, opacity: 0.85, marginBottom: 6 }}
+                    >
+                      {e.lugar}
+                    </div>
+                    <div
+                      className="font-inter-tight inline-flex items-center gap-1.5"
+                      style={{ fontSize: 12, fontWeight: 600 }}
+                    >
+                      <Clock size={12} strokeWidth={2} />
+                      {e.hora}
+                    </div>
+                  </div>
+
+                  <div
+                    className="font-inter-tight uppercase"
+                    style={{
+                      padding: "4px 10px",
+                      borderRadius: 999,
+                      background: destacado
+                        ? "rgba(244,196,74,0.2)"
+                        : "rgba(31,74,45,0.1)",
+                      color: destacado ? "var(--cream)" : "var(--valley)",
+                      fontSize: 10,
+                      fontWeight: 700,
+                      letterSpacing: "0.06em",
+                      flexShrink: 0,
+                    }}
+                  >
+                    {ETIQUETA_CATEGORIA[e.categoria as CategoriaEvento] ?? e.categoria}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+      </div>
     </div>
   );
 }

@@ -1,4 +1,5 @@
 @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,500;1,600&family=DM+Serif+Display:ital@0;1&family=Inter:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700;800&family=Dancing+Script:wght@600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,800;1,9..144,500&family=Inter+Tight:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -8,11 +9,40 @@
     Tipografía del valle
     · Playfair Display — elegancia de etiqueta de Dulces Issa
     · Inter / Geist — datos técnicos y UI moderna
+    · Fraunces / Inter Tight — donante Lovable (folk-editorial)
     ─────────────────────────────────────────────────────── */
 
 :root {
   font-family: "Montserrat", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   color: #222222;
+
+  /* ─── Tokens Dato 68 (paleta locked del diseño Claude Design) ────────────
+   * Hex exactos del mockup `Globe loader.zip > shared.jsx`.
+   * Toda la app consume estas vars vía clases tailwind (bg-card, text-ink, etc.).
+   */
+  --cream: #F5F0E6;
+  --paper: #EDE5D3;
+  --paper-dark: #E5DCC4;
+  --valley: #1F4A2D;
+  --valley-mid: #3F7B47;
+  --field: #A8C77A;
+  --sun: #F4C24A;
+  --terracotta: #C8623A;
+  --terracotta-deep: #A24A28;
+  --ink: #1F1A14;
+  --ink-soft: #3D342A;
+  --muted: rgba(31, 26, 20, 0.55);
+  --muted-soft: rgba(31, 26, 20, 0.38);
+  --border: rgba(31, 26, 20, 0.12);
+  --border-soft: rgba(31, 26, 20, 0.08);
+
+  /* Tokens semánticos shadcn-compat (consumidos por BusinessCard, EventCard...) */
+  --background: var(--cream);
+  --foreground: var(--ink);
+  --card: var(--cream);
+  --card-foreground: var(--ink);
+  --muted-foreground: var(--muted);
+  --mustard: var(--sun);
 }
 
 html,
@@ -249,5 +279,73 @@ body {
       opacity: 1;
       transform: translateY(0);
     }
+  }
+
+  /* ─── Utilidades editoriales Lovable ────────────────────────────────────
+   * Consumidas SOLO por componentes en src/components/lovable/*.
+   * No tocar para no romper el lenguaje visual nuevo.
+   */
+  .lift {
+    transition: transform 280ms cubic-bezier(0.2, 0.8, 0.2, 1),
+                box-shadow 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .lift:hover {
+    transform: translateY(-2px);
+  }
+
+  .hairline {
+    height: 1px;
+    background: color-mix(in oklab, var(--ink) 12%, transparent);
+  }
+
+  .eyebrow {
+    font-family: "Inter Tight", "Inter", sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+  .eyebrow-sm {
+    font-family: "Inter Tight", "Inter", sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+
+  .display-md {
+    font-family: "Fraunces", Georgia, serif;
+    font-size: clamp(28px, 4vw, 38px);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+  }
+
+  .lede {
+    font-family: "Inter Tight", "Inter", sans-serif;
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--muted-foreground);
+    max-width: 60ch;
+  }
+
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Oculta scrollbar (consumida por carousels horizontales del Home/Directorio) */
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+
+  .photo-editorial::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(
+      180deg,
+      transparent 60%,
+      color-mix(in oklab, var(--ink) 14%, transparent) 100%
+    );
   }
 }

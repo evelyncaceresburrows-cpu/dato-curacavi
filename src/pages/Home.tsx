@@ -1,258 +1,631 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import { 
-  Bell, 
-  ChevronDown, 
-  ChevronRight, 
-  Sun, 
-  MapPin, 
-  Star,
-  Clock,
-  Heart,
-  Calendar,
-  Search,
-  Plus
-} from "lucide-react";
-import {
-  CATEGORIAS_HOME_KEYS,
-  categoriaDef,
-  COMERCIOS,
-  EVENTOS,
-  eventoBySlug,
-} from "@/data/seed";
-import { TopographicPattern } from "../components/TopographicPattern";
-import { LogoPrincipal } from "../components/Icons";
+/**
+ * Home — pantalla de inicio Dato 68 redesign C (mockup Claude Design).
+ *
+ * Estructura:
+ *   1. AppHeader (mobile only — desktop usa NavBar global)
+ *   2. Saludo dinámico ("Buenos días, vecino")
+ *   3. Hero search → /directorio
+ *   4. Grid 4-col de categorías → /directorio?cat=...
+ *   5. Banner Ruta 68 → /ruta
+ *   6. SectionHead "Del día" + carousel destacados
+ *   7. SectionHead "Esta semana" + card próximo evento
+ *   8. CTA Publica → /socio
+ *
+ * Mantiene: useComercios, useEventos no se usan acá (Home muestra destacados
+ * directos de COMERCIOS/EVENTOS seed por simplicidad). SEO + analytics intacto.
+ *
+ * Responsive:
+ *   - mobile: 1 col, hero a 100% ancho.
+ *   - md+: contenedor max-w-2xl centrado (mockup-look). En desktop se ve
+ *     como una columna ancha al medio sobre cream.
+ */
+import { useNavigate } from "react-router-dom";
+import { Search, Bell, ArrowRight, Plus, Clock, ChevronRight } from "lucide-react";
+import { CATEGORIAS_HOME_KEYS, categoriaDef } from "@/data/seed";
+import { useComercios } from "@/data/hooks/useComercios";
+import { useEventos } from "@/data/hooks/useEventos";
 import { SEO } from "@/components/SEO";
 import { organizationLd } from "@/lib/seoLd";
 import { track, Events } from "@/lib/analytics";
+import { getSaludo } from "@/lib/saludo";
+import { AppHeader } from "@/components/lovable/AppHeader";
+import { SectionHead } from "@/components/lovable/SectionHead";
+import { StatusBadge } from "@/components/lovable/StatusBadge";
+import { DatoMark } from "@/components/lovable/DatoMark";
 
 export default function Home() {
-  const [query, setQuery] = useState("");
+  const navigate = useNavigate();
+  const saludo = getSaludo();
 
-  const datoDia = eventoBySlug("feria-libre")!;
-  const eventosRecientes = EVENTOS.filter((e) =>
-    ["fiesta-chicha-2026", "trekking-la-cruz"].includes(e.id)
-  );
-  const recomendados = COMERCIOS.filter((c) =>
-    ["la-pica", "cafe-patio", "vina-altar-uco"].includes(c.id)
-  );
-  const categoriasHome = CATEGORIAS_HOME_KEYS.map((k) => categoriaDef(k));
+  // Datos reales desde Supabase (fallback al seed si Supabase falla).
+  const { data: comercios = [] } = useComercios();
+  const { data: eventos = [] } = useEventos();
+
+  // Top 3 con mejor rating.
+  const destacados = [...comercios]
+    .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
+    .slice(0, 3);
+
+  // Próximo evento publicado.
+  const proxEvento = eventos[0];
+
+  // Categorías home, filtrando vacías (sin comercios publicados).
+  const categoriasHome = (() => {
+    const counts = new Map<string, number>();
+    for (const c of comercios) counts.set(c.categoria, (counts.get(c.categoria) ?? 0) + 1);
+    return CATEGORIAS_HOME_KEYS
+      .map((k) => categoriaDef(k))
+      .filter((c) => (counts.get(c.key) ?? 0) > 0);
+  })();
 
   return (
-    <div className="bg-arena min-h-screen">
+    <div style={{ background: "var(--cream)" }} className="min-h-screen pb-32 md:pb-16">
       <SEO
-        title="Dato Curacaví — La guía vecinal del valle"
-        description="Descubre picadas, chicha, dulces, eventos y servicios del valle de Curacaví. La guía vecinal oficial hecha para los que vivimos acá."
+        title="Dato 68 — La guía vecinal del valle"
+        description="Picadas, viñas, chicha, ferias y eventos del valle de Curacaví. La guía vecinal oficial del corredor Ruta 68."
         path="/"
         jsonLd={organizationLd()}
       />
-      {/* ——— Hero Section ——— */}
-      <section className="relative h-[600px] w-full overflow-hidden flex flex-col items-center justify-center px-6 bg-bosque-800">
-        {/* Background Image with Overlay */}
-        <div 
-          className="absolute inset-0 bg-cover bg-center transition-transform duration-1000 scale-105"
-          style={{ backgroundImage: "url('/images/bg-curacavi.png')" }}
+
+      {/* Mobile-only header (desktop usa NavBar global del shell) */}
+      <div className="md:hidden">
+        <AppHeader
+          action={
+            <button
+              type="button"
+              aria-label="Notificaciones"
+              className="flex h-9 w-9 items-center justify-center rounded-full"
+              style={{
+                background: "var(--paper)",
+                border: "1px solid var(--border-soft)",
+                color: "var(--ink)",
+              }}
+            >
+              <Bell size={16} strokeWidth={2} />
+            </button>
+          }
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-bosque-800/90" />
-        
-        {/* Topographic Pattern Overlay */}
-        <TopographicPattern className="text-white" />
+      </div>
 
-        {/* Hero Content */}
-        <div className="relative z-10 w-full max-w-2xl text-center flex flex-col items-center">
-           <LogoPrincipal className="h-40 md:h-56 w-auto mb-6 drop-shadow-elevada" />
-           
-           <h1 className="font-mont text-4xl md:text-5xl font-black text-white tracking-tight leading-tight drop-shadow-sm">
-             Descubre lo mejor <br />
-             <span className="text-white/90">del Valle</span>
-           </h1>
-           
-           <p className="mt-4 text-lg font-bold text-white/80 max-w-md mx-auto">
-             Panoramas, servicios y picadas <br className="hidden md:block" />
-             en el corazón de Curacaví.
-           </p>
-
-           {/* Search Box inside Hero */}
-           <div className="mt-10 w-full relative group">
-              <div className="absolute inset-y-0 left-6 flex items-center text-humo">
-                <Search size={22} />
-              </div>
-              <input 
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="¿Qué buscas hoy en el valle?"
-                className="w-full rounded-[32px] bg-white/95 backdrop-blur-md py-6 pl-16 pr-8 text-lg font-bold text-carbon shadow-elevada outline-none ring-bosque-600/20 focus:ring-8 transition-all"
-              />
-              <button
-                onClick={() => query.trim() && track(Events.BUSCAR, { q: query.trim().slice(0, 60) })}
-                className="absolute right-3 top-3 bottom-3 bg-bosque-600 text-white px-8 rounded-[24px] font-bold shadow-cta active:scale-95 transition-transform"
-              >
-                Buscar
-              </button>
-           </div>
+      {/* ─── HERO desktop only — gradient crepúsculo + cordillera SVG ─── */}
+      <section
+        className="relative hidden overflow-hidden md:flex md:items-center"
+        style={{
+          background:
+            "linear-gradient(180deg, #E8A878 0%, #C8895A 30%, #8B6B52 60%, #5A4A3D 100%)",
+          minHeight: 460,
+          padding: "80px 0 64px",
+        }}
+      >
+        <div
+          aria-hidden
+          className="absolute inset-0"
+          style={{
+            backgroundImage:
+              "url('data:image/svg+xml,%3Csvg width=\"1600\" height=\"600\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cdefs%3E%3ClinearGradient id=\"sky\" x1=\"0%25\" y1=\"0%25\" x2=\"0%25\" y2=\"100%25\"%3E%3Cstop offset=\"0%25\" style=\"stop-color:%23F4C24A;stop-opacity:0.5\"/%3E%3Cstop offset=\"100%25\" style=\"stop-color:%23C8623A;stop-opacity:0.3\"/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=\"1600\" height=\"600\" fill=\"url(%23sky)\"/%3E%3Cpath d=\"M0,380 Q200,340 400,360 T800,350 T1200,370 T1600,350 L1600,600 L0,600 Z\" fill=\"%23A8844D\" opacity=\"0.6\"/%3E%3Cpath d=\"M0,420 Q250,380 500,400 T1000,390 T1600,410 L1600,600 L0,600 Z\" fill=\"%238B6B4D\" opacity=\"0.7\"/%3E%3Cpath d=\"M0,460 Q300,420 600,440 T1200,430 T1600,450 L1600,600 L0,600 Z\" fill=\"%236B5340\" opacity=\"0.75\"/%3E%3Cpath d=\"M0,500 Q350,460 700,480 T1400,470 T1600,490 L1600,600 L0,600 Z\" fill=\"%234A3A30\" opacity=\"0.8\"/%3E%3C/svg%3E')",
+            backgroundSize: "cover",
+            backgroundPosition: "center bottom",
+          }}
+        />
+        <div
+          aria-hidden
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(to bottom, transparent 0%, rgba(245,240,230,0.3) 100%)",
+          }}
+        />
+        <div
+          className="relative mx-auto w-full text-center"
+          style={{ maxWidth: 1400, padding: "0 24px", zIndex: 2 }}
+        >
+          <div
+            className="font-inter-tight uppercase mx-auto mb-3"
+            style={{
+              fontSize: 14,
+              fontWeight: 600,
+              letterSpacing: "0.08em",
+              color: "rgba(255,255,255,0.9)",
+              textShadow: "0 1px 6px rgba(31,26,20,0.3)",
+            }}
+          >
+            {saludo.icon} {saludo.sub}
+          </div>
+          <h1
+            className="font-fraunces"
+            style={{
+              fontSize: 56,
+              fontWeight: 500,
+              lineHeight: 1.1,
+              letterSpacing: "-0.03em",
+              marginBottom: 16,
+              color: "white",
+              textShadow: "0 2px 20px rgba(31,26,20,0.4)",
+            }}
+          >
+            {saludo.saludo},{" "}
+            <em style={{ fontStyle: "italic", color: "var(--terracotta)" }}>
+              vecino
+            </em>
+          </h1>
+          <p
+            className="mx-auto"
+            style={{
+              fontSize: 18,
+              maxWidth: 600,
+              lineHeight: 1.6,
+              marginBottom: 32,
+              color: "rgba(255,255,255,0.95)",
+              textShadow: "0 1px 8px rgba(31,26,20,0.3)",
+            }}
+          >
+            Todo lo que buscas en Curacaví y la Ruta 68: panaderías, viñas,
+            ferias, restaurantes y más.
+          </p>
+          <button
+            type="button"
+            onClick={() => navigate("/directorio")}
+            className="mx-auto flex items-center gap-3 rounded-2xl"
+            style={{
+              maxWidth: 600,
+              width: "100%",
+              background: "white",
+              border: "2px solid var(--border)",
+              padding: "14px 20px",
+              boxShadow: "0 4px 24px rgba(31,26,20,0.08)",
+            }}
+          >
+            <Search size={20} strokeWidth={2} style={{ color: "var(--valley)" }} />
+            <span
+              className="font-inter-tight flex-1 text-left"
+              style={{ fontSize: 16, color: "var(--muted)" }}
+            >
+              Buscar panaderías, viñas, ferias…
+            </span>
+          </button>
         </div>
       </section>
 
-      {/* ——— Main Content Wrapper ——— */}
-      <div className="mx-auto max-w-screen-xl px-4 md:px-12 py-16">
-        {/* Context Bar (Weather / Location) */}
-        <div className="flex items-center gap-3 mb-16">
-          <div className="flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-bold text-carbon shadow-tarjeta border border-bosque-600/5">
-            <MapPin size={18} className="text-bosque-600" />
-            Todo Curacaví
-            <ChevronDown size={14} className="ml-1 text-humo" />
+      <div className="mx-auto w-full max-w-2xl md:max-w-none md:px-6 md:pt-12">
+        {/* ─── Saludo (mobile) ───────────────────────────────────────── */}
+        <div className="px-5 pt-2 pb-5 md:hidden">
+          <div
+            className="mb-1.5 font-inter-tight uppercase"
+            style={{
+              fontSize: 12,
+              color: "var(--muted)",
+              fontWeight: 600,
+              letterSpacing: "0.06em",
+            }}
+          >
+            {saludo.icon} {saludo.sub}
           </div>
-          <div className="ml-auto flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-bold text-carbon shadow-tarjeta border border-bosque-600/5">
-            <Sun size={20} className="text-amber-500" />
-            22°C &middot; Despejado
-          </div>
+          <h1
+            className="font-fraunces"
+            style={{
+              margin: 0,
+              fontWeight: 500,
+              fontSize: "clamp(28px, 6vw, 38px)",
+              lineHeight: 1.05,
+              letterSpacing: "-0.03em",
+              color: "var(--ink)",
+            }}
+          >
+            {saludo.saludo},
+            <br />
+            <em
+              style={{
+                fontStyle: "italic",
+                color: "var(--terracotta)",
+                fontWeight: 500,
+              }}
+            >
+              vecino
+            </em>
+            .
+          </h1>
         </div>
 
-      {/* ——— Explora Curacaví ——— */}
-      <section className="mt-16">
-        <div className="flex items-center justify-between">
-          <h2 className="font-mont text-xl font-extrabold text-carbon">
-            Explora Curacaví
-          </h2>
-          <Link to="/directorio" className="text-xs font-bold text-bosque-600 uppercase tracking-widest">
-            Ver todo
-          </Link>
-        </div>
-        
-        <div className="mt-8 flex gap-8 overflow-x-auto pb-4 no-scrollbar">
-          {categoriasHome.map((c) => (
-            <Link
-              key={c.key}
-              to={`/directorio?cat=${c.key}`}
-              className="flex flex-col items-center gap-3 shrink-0"
+        {/* ─── Hero search (mobile only — desktop ya tiene el hero gradient) ─── */}
+        <div className="px-5 pb-6 md:hidden">
+          <button
+            type="button"
+            onClick={() => navigate("/directorio")}
+            className="flex w-full items-center gap-3 rounded-2xl text-left"
+            style={{
+              background: "var(--paper)",
+              border: "1px solid var(--border-soft)",
+              padding: "16px 18px",
+            }}
+          >
+            <Search
+              size={20}
+              strokeWidth={2}
+              style={{ color: "var(--muted)" }}
+              aria-hidden
+            />
+            <span
+              className="font-inter-tight flex-1"
+              style={{ fontSize: 15, color: "var(--muted)" }}
             >
-              <div
-                className="flex h-16 w-16 items-center justify-center rounded-[20px] text-white shadow-tarjeta transition-transform hover:scale-105 active:scale-95"
-                style={{ background: c.color }}
+              Buscar pan, viñas, ferias…
+            </span>
+            <span
+              className="font-inter-tight"
+              style={{
+                background: "var(--valley)",
+                color: "var(--cream)",
+                padding: "4px 10px",
+                borderRadius: 8,
+                fontSize: 11,
+                fontWeight: 700,
+                letterSpacing: "0.04em",
+              }}
+            >
+              ⌘K
+            </span>
+          </button>
+        </div>
+
+        {/* ─── Categorías 4-col mobile / 8-col desktop ──────────────── */}
+        <SectionHead title="Categorías" sub="Lo que mueve al valle" />
+        <div className="grid grid-cols-4 gap-2 px-3.5 pb-7 md:grid-cols-8 md:gap-3 md:px-0">
+          {categoriasHome.slice(0, 8).map((c) => (
+            <button
+              key={c.key}
+              type="button"
+              onClick={() => navigate(`/directorio?cat=${c.key}`)}
+              className="flex flex-col items-center gap-1.5 rounded-2xl"
+              style={{
+                background: "var(--paper)",
+                border: "1px solid var(--border-soft)",
+                padding: "14px 4px",
+              }}
+            >
+              <c.Icon size={26} strokeWidth={1.6} style={{ color: "var(--ink)" }} />
+              <span
+                className="font-inter-tight text-center"
+                style={{
+                  fontSize: 11,
+                  fontWeight: 600,
+                  color: "var(--ink)",
+                  letterSpacing: "-0.005em",
+                }}
               >
-                <c.Icon size={28} />
-              </div>
-              <span className="text-[11px] font-bold text-humo uppercase tracking-wider text-center max-w-[80px]">
                 {c.short}
               </span>
-            </Link>
+            </button>
           ))}
         </div>
-      </section>
 
-      {/* ——— Dato del día ——— */}
-      <section className="mt-16">
-        <div className="ficha overflow-hidden bg-white p-6 shadow-tarjeta">
-          <div className="flex flex-col md:flex-row gap-6">
-            <div className="flex-1 order-2 md:order-1">
-              <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-humo">
-                Dato del día
-              </span>
-              <h3 className="mt-3 font-mont text-xl font-extrabold text-carbon">
-                {datoDia.titulo}
-              </h3>
-              <p className="mt-2 text-sm font-medium text-humo leading-relaxed">
-                Hoy desde las {datoDia.hora} hrs.<br />
-                <span className="flex items-center gap-1 mt-2">
-                  <MapPin size={12} className="text-bosque-600" />
-                  {datoDia.lugar}
-                </span>
-              </p>
-            </div>
-            <div 
-              className="h-32 w-full md:w-48 rounded-2xl order-1 md:order-2"
-              style={{ background: datoDia.imagen, backgroundSize: 'cover', backgroundPosition: 'center' }}
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* ——— Eventos y panoramas ——— */}
-      <section className="mt-16">
-        <div className="flex items-center justify-between">
-          <h2 className="font-mont text-xl font-extrabold text-carbon">
-            Eventos y panoramas
-          </h2>
-          <Link to="/agenda" className="text-xs font-bold text-bosque-600 uppercase tracking-widest">
-            Ver calendario
-          </Link>
-        </div>
-
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-          {eventosRecientes.map((e) => {
-            const d = new Date(e.fecha + "T00:00:00");
-            const diaSemana = d.toLocaleDateString("es-CL", { weekday: "short" }).toUpperCase();
-            const diaNum = d.getDate();
-
-            return (
-              <Link
-                key={e.id}
-                to={`/evento/${e.slug}`}
-                className="relative h-64 overflow-hidden rounded-3xl shadow-tarjeta group"
-              >
-                <div 
-                  className="absolute inset-0 transition-transform duration-700 group-hover:scale-110"
-                  style={{ background: e.imagen, backgroundSize: 'cover', backgroundPosition: 'center' }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                
-                {/* Date Tag */}
-                <div className="absolute top-5 left-5 flex w-12 flex-col items-center rounded-xl bg-white/95 py-2 text-center shadow-tarjeta backdrop-blur">
-                  <span className="text-[10px] font-bold text-bosque-700 leading-none">{diaSemana}</span>
-                  <span className="text-xl font-extrabold text-carbon leading-none mt-0.5">{diaNum}</span>
-                </div>
-
-                <div className="absolute inset-x-6 bottom-6 text-white">
-                  <h4 className="font-mont text-lg font-extrabold leading-tight shadow-sm">
-                    {e.titulo}
-                  </h4>
-                  <p className="mt-1 text-xs font-medium text-white/80 line-clamp-1">
-                    {e.lugar} &middot; {e.hora} hrs.
-                  </p>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* ——— Recomendados para ti ——— */}
-      <section className="mt-16 pb-20">
-        <div className="flex items-center justify-between">
-          <h2 className="font-mont text-xl font-extrabold text-carbon">
-            Recomendados para ti
-          </h2>
-          <Link to="/directorio" className="text-xs font-bold text-bosque-600 uppercase tracking-widest">
-            Ver todo
-          </Link>
-        </div>
-
-        <div className="mt-8 grid grid-cols-2 lg:grid-cols-3 gap-6">
-          {recomendados.map((l) => (
-            <Link
-              key={l.id}
-              to={`/lugar/${l.slug}`}
-              className="flex flex-col gap-3 group"
+        {/* ─── Banner Ruta 68 ────────────────────────────────────────── */}
+        <div className="px-5 pb-7">
+          <button
+            type="button"
+            onClick={() => navigate("/ruta")}
+            className="relative w-full overflow-hidden rounded-3xl text-left"
+            style={{
+              // Foto Unsplash de viñedo con cordillera (placeholder hasta que
+              // subas la tuya: editar `comercios.imagen` o pasar URL aquí).
+              backgroundImage:
+                "linear-gradient(135deg, rgba(31,74,45,0.78) 0%, rgba(63,123,71,0.55) 100%), url('https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?w=1600&q=80&auto=format&fit=crop&fm=jpg')",
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              color: "var(--cream)",
+              padding: "32px 24px",
+              minHeight: 220,
+              border: "none",
+            }}
+          >
+            <div
+              className="font-inter-tight uppercase"
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                letterSpacing: "0.16em",
+                opacity: 0.7,
+                marginBottom: 8,
+              }}
             >
-              <div 
-                className="aspect-square w-full rounded-2xl shadow-tarjeta overflow-hidden transition-transform group-hover:-translate-y-1"
-                style={{ background: l.imagen, backgroundSize: 'cover', backgroundPosition: 'center' }}
-              />
-              <div>
-                <h4 className="font-mont text-[15px] font-extrabold text-carbon line-clamp-1 group-hover:text-bosque-600 transition-colors">
-                  {l.nombre}
-                </h4>
-                <p className="text-[13px] font-medium text-humo line-clamp-1 mt-0.5">
-                  {l.subtitulo} &middot; {l.precio}
-                </p>
+              Ruta 68 · Curacaví → Valpo
+            </div>
+            <div
+              className="font-fraunces"
+              style={{
+                fontSize: "clamp(22px, 5vw, 28px)",
+                fontWeight: 500,
+                letterSpacing: "-0.02em",
+                lineHeight: 1.1,
+                marginBottom: 12,
+              }}
+            >
+              Arma tu domingo
+              <br />
+              por el{" "}
+              <em style={{ fontStyle: "italic", color: "var(--sun)" }}>valle</em>.
+            </div>
+            <div
+              className="inline-flex items-center gap-1.5"
+              style={{ fontSize: 13, fontWeight: 600 }}
+            >
+              Empezar ruta
+              <ArrowRight size={14} strokeWidth={2.4} />
+            </div>
+            <div
+              aria-hidden
+              style={{
+                position: "absolute",
+                right: -12,
+                bottom: -16,
+                opacity: 0.18,
+              }}
+            >
+              <DatoMark size={120} />
+            </div>
+          </button>
+        </div>
+
+        {/* ─── Destacados ────────────────────────────────────────────── */}
+        <SectionHead
+          title="Del día"
+          sub="Comercios destacados"
+          action={
+            <button
+              type="button"
+              onClick={() => navigate("/directorio")}
+              className="font-inter-tight"
+              style={{
+                background: "none",
+                border: "none",
+                color: "var(--terracotta)",
+                fontSize: 12,
+                fontWeight: 700,
+                letterSpacing: "0.04em",
+              }}
+            >
+              VER TODO →
+            </button>
+          }
+        />
+        <div className="flex gap-3 overflow-x-auto px-5 pb-7 no-scrollbar md:grid md:grid-cols-3 md:gap-5 md:overflow-visible md:px-0">
+          {destacados.map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => navigate(`/lugar/${c.slug}`)}
+              className="shrink-0 overflow-hidden rounded-3xl text-left md:w-auto"
+              style={{
+                width: 220,
+                background: "var(--paper)",
+                border: "1px solid var(--border-soft)",
+                padding: 0,
+              }}
+            >
+              <div
+                style={{
+                  height: 130,
+                  background: c.imagen,
+                  position: "relative",
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                }}
+              >
+                <div
+                  className="font-inter-tight"
+                  style={{
+                    position: "absolute",
+                    top: 10,
+                    right: 10,
+                    background: "var(--cream)",
+                    borderRadius: 999,
+                    padding: "4px 8px",
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: "var(--ink)",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 4,
+                  }}
+                >
+                  ★ {c.rating.toFixed(1)}
+                </div>
               </div>
-            </Link>
+              <div style={{ padding: 14 }}>
+                <div
+                  className="font-inter-tight uppercase"
+                  style={{
+                    fontSize: 10,
+                    fontWeight: 700,
+                    color: "var(--terracotta)",
+                    letterSpacing: "0.1em",
+                    marginBottom: 4,
+                  }}
+                >
+                  {categoriaDef(c.categoria).label}
+                </div>
+                <div
+                  className="font-fraunces"
+                  style={{
+                    fontWeight: 500,
+                    fontSize: 17,
+                    letterSpacing: "-0.02em",
+                    color: "var(--ink)",
+                    marginBottom: 4,
+                    lineHeight: 1.15,
+                  }}
+                >
+                  {c.nombre}
+                </div>
+                <div
+                  className="font-inter-tight"
+                  style={{
+                    fontSize: 12,
+                    color: "var(--muted)",
+                    lineHeight: 1.4,
+                    marginBottom: 8,
+                  }}
+                >
+                  {c.subtitulo}
+                </div>
+                <StatusBadge
+                  estado={c.abiertoHasta ? "abierto" : "cerrado"}
+                  cierra={c.abiertoHasta}
+                />
+              </div>
+            </button>
           ))}
         </div>
-      </section>
+
+        {/* ─── Próximo evento ────────────────────────────────────────── */}
+        <SectionHead
+          title="Esta semana"
+          sub="Próximos eventos"
+          action={
+            <button
+              type="button"
+              onClick={() => {
+                track(Events.BUSCAR, { q: "agenda-home" });
+                navigate("/agenda");
+              }}
+              className="font-inter-tight"
+              style={{
+                background: "none",
+                border: "none",
+                color: "var(--terracotta)",
+                fontSize: 12,
+                fontWeight: 700,
+                letterSpacing: "0.04em",
+              }}
+            >
+              AGENDA →
+            </button>
+          }
+        />
+        {proxEvento && (() => {
+          const d = new Date(proxEvento.fecha + "T00:00:00");
+          const mes = d.toLocaleDateString("es-CL", { month: "short" }).toUpperCase().replace(".", "");
+          const dia = d.getDate();
+          return (
+            <div className="px-5 pb-7">
+              <button
+                type="button"
+                onClick={() => navigate(`/evento/${proxEvento.slug}`)}
+                className="flex w-full items-center gap-3.5 rounded-2xl text-left"
+                style={{
+                  background: "var(--cream)",
+                  border: "1px solid var(--border)",
+                  padding: 14,
+                }}
+              >
+                <div
+                  className="flex shrink-0 flex-col items-center justify-center rounded-xl"
+                  style={{
+                    width: 56,
+                    height: 64,
+                    background: "var(--terracotta)",
+                    color: "var(--cream)",
+                  }}
+                >
+                  <div
+                    className="font-inter-tight"
+                    style={{
+                      fontSize: 9,
+                      fontWeight: 700,
+                      letterSpacing: "0.1em",
+                      opacity: 0.85,
+                    }}
+                  >
+                    {mes}
+                  </div>
+                  <div
+                    className="font-fraunces"
+                    style={{ fontSize: 26, fontWeight: 600, lineHeight: 1 }}
+                  >
+                    {dia}
+                  </div>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div
+                    className="font-fraunces"
+                    style={{
+                      fontSize: 17,
+                      fontWeight: 500,
+                      color: "var(--ink)",
+                      letterSpacing: "-0.015em",
+                      marginBottom: 4,
+                    }}
+                  >
+                    {proxEvento.titulo}
+                  </div>
+                  <div
+                    className="font-inter-tight"
+                    style={{ fontSize: 12, color: "var(--muted)", marginBottom: 2 }}
+                  >
+                    {proxEvento.lugar}
+                  </div>
+                  <div
+                    className="font-inter-tight inline-flex items-center gap-1"
+                    style={{
+                      fontSize: 12,
+                      color: "var(--valley-mid)",
+                      fontWeight: 600,
+                    }}
+                  >
+                    <Clock size={12} strokeWidth={2} /> {proxEvento.hora}
+                  </div>
+                </div>
+                <ChevronRight size={16} style={{ color: "var(--muted)" }} />
+              </button>
+            </div>
+          );
+        })()}
+
+        {/* ─── CTA Publica ───────────────────────────────────────────── */}
+        <div className="px-5 pb-6">
+          <button
+            type="button"
+            onClick={() => navigate("/socio")}
+            className="flex w-full items-center gap-3.5 rounded-2xl text-left"
+            style={{
+              background: "var(--paper)",
+              border: "1.5px dashed var(--terracotta)",
+              padding: "16px 18px",
+            }}
+          >
+            <div
+              className="flex shrink-0 items-center justify-center rounded-xl"
+              style={{
+                width: 40,
+                height: 40,
+                background: "var(--terracotta)",
+                color: "var(--cream)",
+              }}
+            >
+              <Plus size={20} strokeWidth={2.5} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div
+                className="font-fraunces"
+                style={{
+                  fontSize: 16,
+                  fontWeight: 500,
+                  color: "var(--ink)",
+                  letterSpacing: "-0.015em",
+                }}
+              >
+                ¿Tienes un negocio en Curacaví?
+              </div>
+              <div
+                className="font-inter-tight"
+                style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}
+              >
+                Publícalo gratis en Dato 68
+              </div>
+            </div>
+            <ChevronRight size={14} strokeWidth={2.2} style={{ color: "var(--muted)" }} />
+          </button>
+        </div>
       </div>
     </div>
   );
 }
-

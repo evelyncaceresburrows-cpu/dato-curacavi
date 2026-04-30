@@ -10,12 +10,10 @@ export default defineConfig({
       "@": path.resolve(__dirname, "src"),
     },
   },
-  // Cache y dist redirigidos a /tmp en este sandbox para evitar EPERM.
-  // En dev local puedes borrar estas dos líneas.
-  cacheDir: "/tmp/vite-cache-dato-curacavi",
   build: {
-    outDir: "/tmp/dato-curacavi-dist",
-    emptyOutDir: true,
+    // outDir default `dist` — Vercel publica desde ahí (vercel.json outputDirectory).
+    // No usar "/tmp/..." porque Vercel CLI ignora paths fuera del repo y publica
+    // un dist/ viejo. (Bug que ocultó días de cambios — Apr 28 2026.)
     target: "es2020",
     rollupOptions: {
       output: {

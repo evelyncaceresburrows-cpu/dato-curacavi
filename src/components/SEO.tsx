@@ -23,7 +23,7 @@ interface Props {
  *
  * Ejemplo (en Lugar.tsx):
  *   <SEO
- *     title={`${comercio.nombre} · Dato Curacaví`}
+ *     title={`${comercio.nombre} · Dato 68`}
  *     description={comercio.descripcion}
  *     path={`/lugar/${comercio.slug}`}
  *     jsonLd={localBusinessLd(comercio)}
@@ -39,10 +39,10 @@ export function SEO({
   noindex,
 }: Props) {
   const fullTitle = title
-    ? title.includes("Dato Curacaví")
+    ? title.includes("Dato 68")
       ? title
-      : `${title} · Dato Curacaví`
-    : "Dato Curacaví — La guía vecinal del valle";
+      : `${title} · Dato 68`
+    : "Dato 68 — La guía vecinal del valle";
   const canonical = path ? `${SITE}${path}` : SITE;
   const desc =
     description ??

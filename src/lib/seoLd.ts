@@ -86,7 +86,7 @@ export function eventoLd(e: Evento): Record<string, unknown> {
     },
     organizer: {
       "@type": "Organization",
-      name: "Dato Curacaví",
+      name: "Dato 68",
       url: SITE,
     },
     offers: e.gratis
@@ -113,7 +113,7 @@ export function organizationLd(): Record<string, unknown> {
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: "Dato Curacaví",
+    name: "Dato 68",
     url: SITE,
     logo: `${SITE}/images/logo-oficial.png`,
     areaServed: {

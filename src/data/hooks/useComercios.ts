@@ -43,6 +43,14 @@ interface ComercioRow {
   lat: number | null;
   lng: number | null;
   distancia_km: number | null;
+  imagenes_extra: string[] | null;
+  // Campos Ruta 68 (de migration 0004_dato68)
+  comuna_id: string | null;
+  eje_ruta_km: number | null;
+  tiempo_visita_min: number | null;
+  precio_clp_aprox: number | null;
+  /** Tags asociados via comercio_tags pivot, vienen como array de ids. */
+  tags: string[] | null;
 }
 
 function rowToComercio(row: ComercioRow): Comercio {
@@ -72,6 +80,16 @@ function rowToComercio(row: ComercioRow): Comercio {
     lat: row.lat ?? undefined,
     lng: row.lng ?? undefined,
     distanciaKm: row.distancia_km ?? undefined,
+    imagenesExtra: row.imagenes_extra ?? [],
+    // Campos Ruta 68 — agregados con `as any` porque `Comercio` (tipo del seed)
+    // no los declara, pero el planificador `armarRuta` los lee como ComercioRuta.
+    ...({
+      comuna_id: row.comuna_id ?? "curacavi",
+      eje_ruta_km: row.eje_ruta_km ?? undefined,
+      tiempo_visita_min: row.tiempo_visita_min ?? undefined,
+      precio_clp_aprox: row.precio_clp_aprox ?? undefined,
+      tags: row.tags ?? [],
+    } as Partial<Comercio>),
   };
 }
 
@@ -79,12 +97,13 @@ async function fetchComercios(): Promise<Comercio[]> {
   if (!isSupabaseConfigured || !supabase) {
     return ordenarComercios(COMERCIOS);
   }
+  // Vista v_comercios_busqueda agrega tags[] via JOIN a comercio_tags + tags.
+  // Si la vista no estuviera (instalación vieja), caemos al SELECT directo.
   const { data, error } = await supabase
-    .from("comercios")
+    .from("v_comercios_busqueda")
     .select(
-      "id,slug,nombre,categoria,subtitulo,descripcion,direccion,telefono,whatsapp,web,email,precio,rating,reviews,estado,abierto_hasta,imagen,destacados,coords_x,coords_y,lat,lng,distancia_km"
-    )
-    .eq("publicado", true);
+      "id,slug,nombre,categoria,subtitulo,descripcion,direccion,telefono,whatsapp,web,email,precio,rating,reviews,estado,imagen,comuna_id,eje_ruta_km,tiempo_visita_min,precio_clp_aprox,tags,lat,lng"
+    );
 
   if (error || !data || data.length === 0) {
     if (error) console.warn("[useComercios] Supabase error, usando semilla:", error.message);

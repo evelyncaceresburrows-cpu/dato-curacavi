@@ -51,7 +51,7 @@ export default function RegistroSocioSkill({ onCerrar }: Props) {
             </p>
             <p className="mt-1 text-xs text-tierra-700">
               <strong>{nombre}</strong> está en lista de espera del piloto 2026.
-              El equipo de Dato Curacaví le contactará en 48 hrs.
+              El equipo de Dato 68 le contactará en 48 hrs.
             </p>
             <Link
               to="/socio"

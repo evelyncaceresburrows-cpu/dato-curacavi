@@ -17,10 +17,12 @@ import { queryClient } from "./data/queryClient";
  */
 const USE_HASH_ROUTER = import.meta.env.VITE_USE_HASH_ROUTER === "true";
 const Router = USE_HASH_ROUTER ? HashRouter : BrowserRouter;
-import { IconCasa, IconLupa, IconHoja, IconMaletin, IconSello, LogoPrincipal } from "./components/Icons";
-import { Calendar, User, Plus } from "lucide-react";
+import { IconLupa, LogoPrincipal } from "./components/Icons";
 import FloatingConcierge from "./components/FloatingConcierge";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { SplashScreen } from "./components/lovable/SplashScreen";
+import { DatoMark } from "./components/lovable/DatoMark";
+import { Wordmark } from "./components/lovable/Wordmark";
 
 // Code-splitting por ruta — cada página es un chunk independiente.
 // El vecino sólo baja lo que necesita para la pantalla que está viendo.
@@ -32,6 +34,7 @@ const Socio = lazy(() => import("./pages/Socio"));
 const Lugar = lazy(() => import("./pages/Lugar"));
 const Evento = lazy(() => import("./pages/Evento"));
 const Ruta = lazy(() => import("./pages/Ruta"));
+const Admin = lazy(() => import("./pages/Admin"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 /**
@@ -48,39 +51,42 @@ const MobileApp = ENABLE_MOBILE_PROTOTYPE
   : null;
 
 /**
- * Dato Curacaví — guía oficial del valle
+ * Dato 68 — guía oficial del valle
  * Estética premium: Montserrat, Bosque/Arena, clean interface.
  */
 
 function NavBar() {
   const { pathname } = useLocation();
-  if (pathname.startsWith('/app')) return null;
+  if (pathname.startsWith('/app') || pathname.startsWith('/admin')) return null;
 
   return (
-    <header className="sticky top-0 z-40 bg-arena/80 backdrop-blur-xl border-b border-bosque-600/5">
-      <div className="mx-auto flex max-w-screen-xl items-center justify-between px-6 py-4 md:px-12">
-        <Link to="/" className="flex items-center gap-4 group">
-           <LogoPrincipal className="h-20 md:h-24 w-auto transition-transform group-hover:scale-105" />
+    <header
+      className="sticky top-0 z-40"
+      style={{
+        background: "var(--paper)",
+        borderBottom: "1px solid var(--border)",
+      }}
+    >
+      <div className="mx-auto flex items-center gap-6 px-6 py-3.5" style={{ maxWidth: 1400 }}>
+        <Link to="/" className="flex shrink-0 items-center gap-3" aria-label="Dato 68 — inicio">
+          <DatoMark size={36} />
+          <span className="hidden sm:inline">
+            <Wordmark size={16} inline />
+          </span>
         </Link>
 
-        <nav className="hidden items-center gap-1 md:flex">
+        <nav className="ml-auto hidden items-center gap-1 md:flex">
           <NavPill to="/" label="Inicio" />
           <NavPill to="/directorio" label="Directorio" />
+          <NavPill to="/ruta" label="Arma tu Ruta" />
           <NavPill to="/agenda" label="Agenda" />
-          <NavPill to="/mapa" label="Mapa" />
-          <div className="ml-4 h-6 w-px bg-bosque-600/10 mx-2" />
-          <Link
-            to="/socio"
-            className="btn-bosque px-6 py-2.5 text-sm"
-          >
-            Publicar
-          </Link>
+          <NavPill to="/socio" label="Publicar" />
         </nav>
 
-        <div className="flex md:hidden">
-           <Link to="/directorio" className="p-2 text-carbon">
-              <IconLupa width="24" height="24" />
-           </Link>
+        <div className="ml-auto flex md:hidden">
+          <Link to="/directorio" className="p-2" aria-label="Buscar" style={{ color: "var(--ink)" }}>
+            <IconLupa width="24" height="24" />
+          </Link>
         </div>
       </div>
     </header>
@@ -93,54 +99,70 @@ function NavPill({ to, label }: { to: string; label: string }) {
   return (
     <Link
       to={to}
-      className={`rounded-xl px-4 py-2 text-sm font-bold transition-all ${
-        active
-          ? "text-bosque-600 bg-bosque-50"
-          : "text-humo hover:text-carbon hover:bg-black/5"
-      }`}
+      aria-current={active ? "page" : undefined}
+      className="font-inter-tight rounded-lg px-3 py-2 transition-all"
+      style={{
+        fontSize: 14,
+        fontWeight: 600,
+        background: active ? "var(--valley)" : "transparent",
+        color: active ? "var(--cream)" : "var(--ink)",
+      }}
     >
       {label}
     </Link>
   );
 }
 
+/**
+ * MobileTabBar — 5 tabs estilo Claude Design (Inicio · Buscar · Mi ruta · Agenda · Publica).
+ * Cream sólido con border-top, sin FAB. Solo se ve en mobile (`md:hidden`).
+ * Iconos lucide-react portados del mockup ui.jsx > TabIcon.
+ */
 function MobileTabBar() {
   const { pathname } = useLocation();
-  if (pathname.startsWith('/app')) return null;
+  if (pathname.startsWith('/app') || pathname.startsWith('/admin')) return null;
 
   const tabs = [
-    { to: "/", label: "Inicio", Icon: IconCasa },
-    { to: "/directorio", label: "Explorar", Icon: IconLupa },
-    { to: "/socio", label: "Publicar", Icon: IconSello, fab: true },
-    { to: "/agenda", label: "Agenda", Icon: Calendar },
-    { to: "/perfil", label: "Perfil", Icon: User },
+    { to: "/", label: "Inicio", icon: "home" as const },
+    { to: "/directorio", label: "Buscar", icon: "search" as const },
+    { to: "/ruta", label: "Mi ruta", icon: "route" as const },
+    { to: "/agenda", label: "Agenda", icon: "calendar" as const },
+    { to: "/socio", label: "Publica", icon: "plus" as const },
   ];
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 px-4 pb-6 pt-10 md:hidden pointer-events-none">
-       <div className="absolute inset-0 bg-gradient-to-t from-arena/95 via-arena/60 to-transparent pointer-events-none" />
-       <ul className="relative mx-auto flex max-w-md items-end justify-around rounded-[32px] border border-bosque-600/5 bg-white/95 p-2 shadow-elevada backdrop-blur-xl pointer-events-auto">
-        {tabs.map(({ to, label, Icon, fab }, idx) => {
+    <nav
+      className="fixed inset-x-0 bottom-0 z-40 md:hidden"
+      style={{
+        background: "var(--cream)",
+        borderTop: "1px solid var(--border)",
+        padding: "8px 8px 18px",
+      }}
+    >
+      <ul className="flex items-stretch justify-around">
+        {tabs.map(({ to, label, icon }) => {
           const active = pathname === to || (to !== '/' && pathname.startsWith(to));
-          if (fab) {
-             return (
-                <li key={to} className="relative -top-6">
-                   <Link to={to} className="flex h-14 w-14 items-center justify-center rounded-full bg-bosque-600 text-white shadow-cta border-4 border-white active:scale-95 transition-transform">
-                      <Plus size={28} />
-                   </Link>
-                </li>
-             )
-          }
+          const color = active ? "var(--valley)" : "var(--muted)";
+          const sw = active ? 2.2 : 1.8;
           return (
             <li key={to} className="flex-1">
               <Link
                 to={to}
-                className={`flex flex-col items-center gap-1 py-2 transition-colors ${
-                  active ? "text-bosque-600" : "text-humo"
-                }`}
+                aria-current={active ? "page" : undefined}
+                className="flex flex-col items-center justify-center gap-1 py-1.5"
+                style={{ color }}
               >
-                <Icon size={24} strokeWidth={active ? 3 : 2} />
-                <span className="text-[10px] font-bold tracking-tight">{label}</span>
+                <TabIcon name={icon} color={color} strokeWidth={sw} />
+                <span
+                  className="font-inter-tight"
+                  style={{
+                    fontSize: 10.5,
+                    fontWeight: active ? 700 : 500,
+                    letterSpacing: "0.02em",
+                  }}
+                >
+                  {label}
+                </span>
               </Link>
             </li>
           );
@@ -150,52 +172,184 @@ function MobileTabBar() {
   );
 }
 
-// Simple icons for Mobile Tab Bar to avoid complex imports
-function MapPinIcon(props: any) { return <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg> }
-function CalendarIcon(props: any) { return <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg> }
-function PlusIcon(props: any) { return <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg> }
+function TabIcon({
+  name,
+  color,
+  strokeWidth = 1.8,
+}: {
+  name: "home" | "search" | "route" | "calendar" | "plus";
+  color: string;
+  strokeWidth?: number;
+}) {
+  const common = {
+    width: 22,
+    height: 22,
+    viewBox: "0 0 24 24",
+    fill: "none" as const,
+    stroke: color,
+    strokeWidth,
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const,
+  };
+  if (name === "home")
+    return (
+      <svg {...common}>
+        <path d="M3 11 L 12 3 L 21 11" />
+        <path d="M5 10 V 21 H 19 V 10" />
+      </svg>
+    );
+  if (name === "search")
+    return (
+      <svg {...common}>
+        <circle cx="11" cy="11" r="7" />
+        <path d="M16 16 L 21 21" />
+      </svg>
+    );
+  if (name === "route")
+    return (
+      <svg {...common}>
+        <path d="M6 4 V 10 a 3 3 0 0 0 3 3 h 6 a 3 3 0 0 1 3 3 v 4" />
+        <circle cx="6" cy="3" r="2" fill={color} />
+        <circle cx="18" cy="21" r="2" fill={color} />
+      </svg>
+    );
+  if (name === "calendar")
+    return (
+      <svg {...common}>
+        <rect x="3" y="5" width="18" height="16" rx="2" />
+        <path d="M3 10 H 21 M 8 3 V 7 M 16 3 V 7" />
+      </svg>
+    );
+  // plus
+  return (
+    <svg {...common}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 8 V 16 M 8 12 H 16" />
+    </svg>
+  );
+}
+
 
 function Footer() {
   return (
-    <footer className="bg-carbon py-20 text-white">
-      <div className="mx-auto max-w-7xl px-6">
-        <div className="grid gap-16 md:grid-cols-2 lg:grid-cols-4">
+    <footer
+      className="hidden md:block"
+      style={{
+        background: "var(--ink)",
+        color: "var(--cream)",
+        padding: "64px 0 32px",
+      }}
+    >
+      <div className="mx-auto px-6" style={{ maxWidth: 1400 }}>
+        <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4">
           <div className="lg:col-span-1">
-            <h3 className="font-mont text-2xl font-bold tracking-tight">DATO CURACAVÍ</h3>
-            <p className="mt-6 text-arena/60 font-medium leading-relaxed">
-              La plataforma oficial del Valle. Descubre eventos, servicios y picadas verificadas por nuestra comunidad.
+            <div className="flex items-center gap-3">
+              <DatoMark size={32} />
+              <Wordmark size={16} inline />
+            </div>
+            <p
+              className="font-inter-tight mt-5"
+              style={{
+                fontSize: 14,
+                lineHeight: 1.6,
+                color: "rgba(245,240,230,0.6)",
+              }}
+            >
+              La guía vecinal del corredor Ruta 68. Picadas, viñas, ferias y
+              eventos del valle, hechos para los que vivimos acá.
             </p>
           </div>
           <div>
-            <h4 className="font-bold text-bosque-500 uppercase tracking-widest text-xs">Explorar</h4>
-            <ul className="mt-6 space-y-4 text-arena/80 font-bold">
-              <li><Link to="/" className="hover:text-bosque-400 transition-colors">Inicio</Link></li>
-              <li><Link to="/directorio" className="hover:text-bosque-400 transition-colors">Directorio</Link></li>
-              <li><Link to="/agenda" className="hover:text-bosque-400 transition-colors">Agenda Cultural</Link></li>
-              <li><Link to="/mapa" className="hover:text-bosque-400 transition-colors">Mapa Interactivo</Link></li>
+            <h4
+              className="font-inter-tight uppercase"
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                letterSpacing: "0.16em",
+                color: "var(--terracotta)",
+              }}
+            >
+              Explorar
+            </h4>
+            <ul className="font-inter-tight mt-5 space-y-3" style={{ fontSize: 14 }}>
+              <li><Link to="/" style={{ color: "rgba(245,240,230,0.85)" }}>Inicio</Link></li>
+              <li><Link to="/directorio" style={{ color: "rgba(245,240,230,0.85)" }}>Directorio</Link></li>
+              <li><Link to="/ruta" style={{ color: "rgba(245,240,230,0.85)" }}>Arma tu Ruta</Link></li>
+              <li><Link to="/agenda" style={{ color: "rgba(245,240,230,0.85)" }}>Agenda</Link></li>
             </ul>
           </div>
           <div>
-            <h4 className="font-bold text-bosque-500 uppercase tracking-widest text-xs">Comunidad</h4>
-            <ul className="mt-6 space-y-4 text-arena/80 font-bold">
-              <li><Link to="/socio" className="hover:text-bosque-400 transition-colors">Sumar mi negocio</Link></li>
-              <li><Link to="/socio?tab=evento" className="hover:text-bosque-400 transition-colors">Publicar evento</Link></li>
-              <li><Link to="/concierge" className="hover:text-bosque-400 transition-colors">El Concierge</Link></li>
+            <h4
+              className="font-inter-tight uppercase"
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                letterSpacing: "0.16em",
+                color: "var(--terracotta)",
+              }}
+            >
+              Comunidad
+            </h4>
+            <ul className="font-inter-tight mt-5 space-y-3" style={{ fontSize: 14 }}>
+              <li><Link to="/socio" style={{ color: "rgba(245,240,230,0.85)" }}>Publicar negocio</Link></li>
+              <li><Link to="/socio?tab=evento" style={{ color: "rgba(245,240,230,0.85)" }}>Publicar evento</Link></li>
             </ul>
           </div>
-          <div className="rounded-3xl bg-white/5 p-8 border border-white/10">
-            <h4 className="font-bold">¿Tienes dudas?</h4>
-            <p className="mt-2 text-sm text-arena/60">Escríbenos y te ayudamos a encontrar lo que buscas.</p>
-            <button className="mt-6 w-full btn-bosque">
-              Contactar Soporte
-            </button>
+          <div
+            className="rounded-3xl"
+            style={{
+              background: "rgba(245,240,230,0.05)",
+              border: "1px solid rgba(245,240,230,0.1)",
+              padding: 24,
+            }}
+          >
+            <h4
+              className="font-fraunces"
+              style={{
+                fontSize: 19,
+                fontWeight: 500,
+                letterSpacing: "-0.02em",
+                color: "var(--cream)",
+              }}
+            >
+              ¿Tienes dudas?
+            </h4>
+            <p
+              className="font-inter-tight mt-2"
+              style={{ fontSize: 13, color: "rgba(245,240,230,0.6)" }}
+            >
+              Escríbenos y te ayudamos a encontrar lo que buscas.
+            </p>
+            <Link
+              to="/socio"
+              className="font-inter-tight mt-5 inline-flex w-full items-center justify-center rounded-xl"
+              style={{
+                background: "var(--terracotta)",
+                color: "var(--cream)",
+                padding: "12px 18px",
+                fontSize: 14,
+                fontWeight: 700,
+                textDecoration: "none",
+              }}
+            >
+              Contactar
+            </Link>
           </div>
         </div>
-        <div className="mt-20 border-t border-white/5 pt-10 flex flex-col md:flex-row items-center justify-between gap-4 text-xs font-bold text-arena/30 uppercase tracking-widest">
-          <p>© {new Date().getFullYear()} Dato Curacaví &middot; Marca Registrada</p>
+        <div
+          className="font-inter-tight uppercase mt-16 flex flex-col items-center justify-between gap-4 pt-8 md:flex-row"
+          style={{
+            borderTop: "1px solid rgba(245,240,230,0.1)",
+            fontSize: 11,
+            fontWeight: 600,
+            letterSpacing: "0.16em",
+            color: "rgba(245,240,230,0.4)",
+          }}
+        >
+          <p>© {new Date().getFullYear()} Dato 68 · Hecho con ♥ en Curacaví</p>
           <div className="flex gap-8">
-             <Link to="/privacidad">Privacidad</Link>
-             <Link to="/terminos">Términos</Link>
+            <Link to="/privacidad" style={{ color: "rgba(245,240,230,0.4)" }}>Privacidad</Link>
+            <Link to="/terminos" style={{ color: "rgba(245,240,230,0.4)" }}>Términos</Link>
           </div>
         </div>
       </div>
@@ -212,8 +366,11 @@ function RouteFallback() {
 }
 
 function WebShell() {
+  const { pathname } = useLocation();
+  const isAdmin = pathname.startsWith("/admin");
   return (
     <div className="min-h-screen bg-arena selection:bg-bosque-600 selection:text-white">
+      {!isAdmin && <SplashScreen />}
       <NavBar />
       <main>
         <ErrorBoundary>
@@ -228,14 +385,15 @@ function WebShell() {
               <Route path="/lugar/:slug" element={<Lugar />} />
               <Route path="/evento/:slug" element={<Evento />} />
               <Route path="/ruta" element={<Ruta />} />
+              <Route path="/admin" element={<Admin />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
         </ErrorBoundary>
       </main>
-      <Footer />
+      {!isAdmin && <Footer />}
       <MobileTabBar />
-      <FloatingConcierge />
+      {!isAdmin && <FloatingConcierge />}
     </div>
   );
 }

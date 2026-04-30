@@ -36,6 +36,60 @@ export default {
         "chip-cultura": "#FADCE0",
         "chip-deporte": "#FCE5B6",
         "chip-natura": "#D8E9F4",
+
+        // ─── Tokens Dato 68 (mockup Claude Design) ───────────────────────
+        // Componentes lovable y nuevas pantallas redesign consumen estas vars
+        // via clases tailwind como `bg-card`, `text-muted`, `text-terracotta`, etc.
+        // Las CSS variables se definen en src/index.css.
+        background: "var(--background)",
+        foreground: "var(--foreground)",
+        card: "var(--card)",
+        "card-foreground": "var(--card-foreground)",
+        muted: "var(--muted-foreground)",
+        "muted-foreground": "var(--muted-foreground)",
+        border: "var(--border)",
+        terracotta: "var(--terracotta)",
+        "terracotta-deep": "var(--terracotta-deep)",
+        valley: "var(--valley)",
+        "valley-mid": "var(--valley-mid)",
+        field: "var(--field)",
+        sun: "var(--sun)",
+        cream: "var(--cream)",
+        paper: "var(--paper)",
+        "paper-dark": "var(--paper-dark)",
+        ink: "var(--ink)",
+        "ink-soft": "var(--ink-soft)",
+        mustard: "var(--sun)",
+
+        // ─── Aliases legacy del Concierge ─────────────────────────────────
+        // El componente FloatingConcierge / ConciergePanel fue escrito antes
+        // del rebrand a Dato 68. Para no reescribir 300 líneas mappeamos los
+        // colores viejos (`crema`, `parral`, `tierra`) a la paleta nueva.
+        crema: "var(--cream)",
+        parral: {
+          DEFAULT: "var(--valley)",
+          50: "var(--paper)",
+          100: "var(--paper-dark)",
+          200: "var(--field)",
+          400: "var(--valley-mid)",
+          500: "var(--valley-mid)",
+          600: "var(--valley-mid)",
+          700: "var(--valley)",
+          800: "var(--valley)",
+          900: "var(--ink)",
+        },
+        tierra: {
+          DEFAULT: "var(--ink-soft)",
+          100: "var(--border)",
+          200: "var(--border)",
+          300: "var(--muted-foreground)",
+          400: "var(--muted-foreground)",
+          500: "var(--muted-foreground)",
+          600: "var(--ink-soft)",
+          700: "var(--ink-soft)",
+          800: "var(--ink)",
+          900: "var(--ink)",
+        },
       },
       fontFamily: {
         sans: ["'Montserrat'", "Inter", "system-ui", "sans-serif"],
@@ -43,6 +97,10 @@ export default {
         display: ["'Montserrat'", "Inter", "system-ui", "sans-serif"],
         serif: ["'Playfair Display'", "Georgia", "serif"],
         tagline: ["'Dancing Script'", "cursive"],
+
+        // Familia Lovable — solo para componentes editoriales (BusinessCard, etc.)
+        "fraunces": ["'Fraunces'", "Georgia", "serif"],
+        "inter-tight": ["'Inter Tight'", "Inter", "system-ui", "sans-serif"],
       },
       borderRadius: {
         none: "0",

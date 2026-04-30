@@ -1,7 +1,7 @@
 import { MapPin } from "lucide-react";
 
 /**
- * Logo "Dato Curacaví" reutilizable.
+ * Logo "Dato 68" reutilizable.
  * El símbolo es un pin verde con cerros + sol al interior,
  * inspirado en la identidad de los mockups.
  */
