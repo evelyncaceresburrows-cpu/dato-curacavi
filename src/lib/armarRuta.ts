@@ -250,11 +250,22 @@ export function armarRuta(
     return k <= origenKm; // vuelta
   });
 
-  // 4. Greedy: en orden de eje, agregamos lo que cabe en tiempo + presupuesto.
+  // 4. Greedy con cap por comuna: distribuye paradas en el corredor en
+  //    vez de clusterar todo en la primera comuna que tiene muchos matches.
+  //    Sin esto: 5 picadas en Curacaví y 0 en Casablanca, aunque el usuario
+  //    pidio 5 paradas con tag vino y la idea es atravesar el valle.
   const paradas: Parada[] = [];
   let kmActual = origenKm;
   let tiempoAcum = 0;
   let costoAcum = 0;
+  const conteoPorComuna = new Map<string, number>();
+  // Si el usuario pide 5 paradas y hay >=3 comunas con candidatos, max 2
+  // por comuna fuerza spread. Si hay solo 1-2 comunas, el cap no aplica.
+  const comunasConCandidatos = new Set(
+    candidatos.map((c) => c.comuna_id ?? "desconocida")
+  ).size;
+  const maxPorComuna =
+    comunasConCandidatos >= 3 ? Math.max(2, Math.ceil(max_paradas / 3)) : max_paradas;
 
   // Score precomputado para ordenar entre empates de cercanía
   const conScore = candidatos.map((c) => ({
@@ -264,6 +275,12 @@ export function armarRuta(
 
   for (const { c, score, motivo } of conScore) {
     if (paradas.length >= max_paradas) break;
+
+    const comuna = c.comuna_id ?? "desconocida";
+    if ((conteoPorComuna.get(comuna) ?? 0) >= maxPorComuna) {
+      // Cap por comuna alcanzado — saltamos para dar lugar a otras comunas.
+      continue;
+    }
 
     const km = c.eje_ruta_km ?? 43;
     const distancia = Math.abs(km - kmActual);
@@ -291,6 +308,7 @@ export function armarRuta(
     tiempoAcum += eta + visita;
     costoAcum += costo;
     kmActual = km;
+    conteoPorComuna.set(comuna, (conteoPorComuna.get(comuna) ?? 0) + 1);
 
     paradas.push({
       comercio: c,
