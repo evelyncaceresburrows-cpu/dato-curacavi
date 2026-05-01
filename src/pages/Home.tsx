@@ -174,7 +174,7 @@ export default function Home() {
               textShadow: "0 1px 8px rgba(31,26,20,0.3)",
             }}
           >
-            Todo lo que buscas en Curacaví y la Ruta 68: panaderías, viñas,
+            Todo lo que buscas en Curacaví, Casablanca y la Ruta 68: panaderías, viñas,
             ferias, restaurantes y más.
           </p>
           <button

@@ -320,8 +320,8 @@ function Footer() {
             >
               Escríbenos y te ayudamos a encontrar lo que buscas.
             </p>
-            <Link
-              to="/socio"
+            <a
+              href="mailto:evelyncaceresburrows@gmail.com?subject=Consulta%20Dato%2068"
               className="font-inter-tight mt-5 inline-flex w-full items-center justify-center rounded-xl"
               style={{
                 background: "var(--terracotta)",
@@ -333,7 +333,7 @@ function Footer() {
               }}
             >
               Contactar
-            </Link>
+            </a>
           </div>
         </div>
         <div
