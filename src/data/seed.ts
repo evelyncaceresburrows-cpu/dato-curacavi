@@ -56,7 +56,7 @@ export interface CategoriaDef {
 export const CATEGORIAS: CategoriaDef[] = [
   { key: "picadas",        label: "Picadas",         short: "Picadas",  Icon: UtensilsCrossed, color: "#E06C4B" },
   { key: "dulces",         label: "Dulces y panes",  short: "Dulces",   Icon: Cookie,          color: "#E1A63B" },
-  { key: "chicha",         label: "Chicherías y viñas", short: "Chicha", Icon: Wine,           color: "#7C52B5" },
+  { key: "chicha",         label: "Vino y chicha",   short: "Vino y chicha", Icon: Wine,           color: "#7C52B5" },
   { key: "panoramas",      label: "Panoramas",       short: "Panoramas", Icon: Mountain,       color: "#1F6B45" },
   { key: "servicios",      label: "Servicios",       short: "Servicios", Icon: Wrench,         color: "#2F5AA0" },
   { key: "tramites",       label: "Trámites",        short: "Trámites", Icon: Briefcase,       color: "#2D8F8A" },

@@ -21,7 +21,7 @@ import type { Comercio, Categoria } from "@/data/seed";
 const CATEGORIA_LABEL: Record<Categoria, { label: string; emoji: string; tono: string }> = {
   picadas:        { label: "Picadas",        emoji: "🍽️", tono: "var(--valley)" },
   dulces:         { label: "Dulces",         emoji: "🍪", tono: "var(--terracotta)" },
-  chicha:         { label: "Viñas/Chicha",   emoji: "🍇", tono: "var(--valley-mid)" },
+  chicha:         { label: "Vino y chicha",  emoji: "🍇", tono: "var(--valley-mid)" },
   panoramas:      { label: "Panoramas",      emoji: "🌄", tono: "var(--sun)" },
   servicios:      { label: "Servicios",      emoji: "🛠️", tono: "var(--ink-soft)" },
   tramites:       { label: "Trámites",       emoji: "🏛️", tono: "var(--ink-soft)" },
@@ -47,7 +47,7 @@ const FILTROS_CATEGORIA: { key: Categoria | "todas"; label: string }[] = [
   { key: "todas",     label: "🗺️ Todas" },
   { key: "picadas",   label: "🍽️ Picadas" },
   { key: "dulces",    label: "🍪 Dulces" },
-  { key: "chicha",    label: "🍇 Viñas" },
+  { key: "chicha",    label: "🍇 Vino y chicha" },
   { key: "panoramas", label: "🌄 Panoramas" },
   { key: "cultura",   label: "🎨 Cultura" },
 ];

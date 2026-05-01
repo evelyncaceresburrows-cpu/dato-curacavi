@@ -21,7 +21,7 @@ interface Props {
 const ETIQUETA_CATEGORIA: Record<Categoria, string> = {
   picadas: "Picada",
   dulces: "Dulces",
-  chicha: "Chicha",
+  chicha: "Vino y chicha",
   panoramas: "Panorama",
   servicios: "Servicios",
   tramites: "Trámites",

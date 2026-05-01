@@ -85,7 +85,7 @@ export const CATEGORIAS: CategoriaDef[] = [
   },
   {
     key: "chicha",
-    label: "Chicherías",
+    label: "Vino y chicha",
     Icon: Wine,
     subtitulo: "Del lagar al copón",
     descripcion:
