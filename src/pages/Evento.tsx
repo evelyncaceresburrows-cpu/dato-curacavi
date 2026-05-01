@@ -90,7 +90,15 @@ export default function Evento() {
   const organizador = evento.comercioId
     ? comercios.find((c) => c.slug === evento.comercioId || c.id === evento.comercioId)
     : undefined;
-  const otros = eventos.filter((e) => e.id !== evento.id).slice(0, 3);
+  // "Otros eventos": solo futuros — no mostramos eventos que ya pasaron.
+  const otros = (() => {
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    return eventos
+      .filter((e) => e.id !== evento.id)
+      .filter((e) => new Date(e.fecha + "T00:00:00").getTime() >= hoy.getTime())
+      .slice(0, 3);
+  })();
 
   const isUrl =
     evento.imagen.startsWith("http") || evento.imagen.startsWith("/");
