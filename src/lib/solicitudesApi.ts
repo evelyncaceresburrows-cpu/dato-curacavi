@@ -27,6 +27,12 @@ export interface SolicitudPayload {
   contacto?: string; // nombre del vecino que publica
   /** Sólo negocios: minutos estimados de visita típica. */
   tiempo_visita_min?: number;
+  /** Sólo negocios: precio aprox por persona en CLP. */
+  precio_clp_aprox?: number;
+  /** Sólo negocios: hora cierre tipo "20:00". Vacio = consultar al local. */
+  abierto_hasta?: string;
+  /** Sólo negocios: tags id (familia, vino, barato, etc) seleccionados. */
+  tags?: string[];
 }
 
 export interface SolicitudResult {

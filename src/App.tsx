@@ -382,6 +382,7 @@ function WebShell() {
               <Route path="/agenda" element={<Agenda />} />
               <Route path="/socio" element={<Socio />} />
               <Route path="/publicar" element={<Socio />} />
+              <Route path="/publica" element={<Socio />} />
               <Route path="/lugar/:slug" element={<Lugar />} />
               <Route path="/evento/:slug" element={<Evento />} />
               <Route path="/ruta" element={<Ruta />} />

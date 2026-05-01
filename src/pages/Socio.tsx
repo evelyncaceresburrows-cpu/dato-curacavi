@@ -44,6 +44,12 @@ interface FormState {
   contacto: string;
   /** sólo negocios — minutos típicos de visita. String para alimentar input. */
   tiempo_visita_min: string;
+  /** sólo negocios — precio aprox por persona en CLP. String para input. */
+  precio_clp_aprox: string;
+  /** sólo negocios — hora de cierre tipo "20:00". Vacio = consultar. */
+  abierto_hasta: string;
+  /** sólo negocios — array de tag ids seleccionados (familia, vino, etc). */
+  tags: string[];
   fecha: string;
   hora: string;
   /** Honeypot anti-spam: debe quedar vacío. */
@@ -61,6 +67,9 @@ const EMPTY_FORM: FormState = {
   descripcion: "",
   contacto: "",
   tiempo_visita_min: "",
+  precio_clp_aprox: "",
+  abierto_hasta: "",
+  tags: [],
   fecha: "",
   hora: "",
   sitio_web: "",
@@ -71,6 +80,27 @@ const EMPTY_FORM: FormState = {
  * `supabase/migrations/0004_dato68.sql`). El select se renderiza desde acá
  * mientras no esté el endpoint público de `comunas` cargando dinámico.
  */
+/** Tags disponibles — sincronizado con `tags` table de Supabase. El socio
+ *  marca los que apliquen y el comercio queda en `comercio_tags` cuando
+ *  el admin lo aprueba. */
+const TAGS_DISPONIBLES = [
+  { id: "ninos",        label: "Niños" },
+  { id: "familia",      label: "Familia" },
+  { id: "pareja",       label: "Pareja" },
+  { id: "romantico",    label: "Romántico" },
+  { id: "pet_friendly", label: "Pet friendly" },
+  { id: "barato",       label: "Barato" },
+  { id: "premium",      label: "Premium" },
+  { id: "vino",         label: "Vino" },
+  { id: "comida",       label: "Comida" },
+  { id: "naturaleza",   label: "Naturaleza" },
+  { id: "de_paso",      label: "De paso" },
+  { id: "rapido",       label: "Rápido" },
+  { id: "bano",         label: "Baño" },
+  { id: "lluvia",       label: "Lluvia" },
+  { id: "finde",        label: "Finde" },
+];
+
 const COMUNAS_OPCIONES = [
   { id: "pudahuel",    label: "Pudahuel" },
   { id: "curacavi",    label: "Curacaví" },
@@ -146,6 +176,10 @@ export default function Socio() {
       activeTab === "negocio" && form.tiempo_visita_min.trim()
         ? Number(form.tiempo_visita_min)
         : undefined;
+    const precioNum =
+      activeTab === "negocio" && form.precio_clp_aprox.trim()
+        ? Number(form.precio_clp_aprox)
+        : undefined;
 
     // Validación zod.
     const parsed = solicitudSchema.safeParse({
@@ -199,6 +233,12 @@ export default function Socio() {
         contacto: data.contacto || undefined,
         tiempo_visita_min:
           data.tipo === "negocio" ? data.tiempo_visita_min : undefined,
+        precio_clp_aprox: activeTab === "negocio" ? precioNum : undefined,
+        abierto_hasta:
+          activeTab === "negocio" && form.abierto_hasta.trim()
+            ? form.abierto_hasta.trim()
+            : undefined,
+        tags: activeTab === "negocio" && form.tags.length > 0 ? form.tags : undefined,
         fecha: data.tipo === "evento" ? data.fecha : undefined,
         hora: data.tipo === "evento" ? data.hora : undefined,
         imagen_url,
@@ -513,6 +553,75 @@ export default function Socio() {
                 />
               </Field>
             </div>
+
+            {activeTab === "negocio" && (
+              <>
+                <div className="grid gap-8 md:grid-cols-2">
+                  <Field
+                    label="Precio aprox por persona en CLP (opcional)"
+                    icon={<Info size={16} />}
+                    error={fieldErrors.precio_clp_aprox}
+                  >
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      min={0}
+                      step={500}
+                      placeholder="Ej: 12000"
+                      value={form.precio_clp_aprox}
+                      onChange={(e) => update("precio_clp_aprox", e.target.value)}
+                      className="form-input"
+                    />
+                  </Field>
+                  <Field
+                    label="Hora de cierre (opcional, formato 24h)"
+                    icon={<Clock size={16} />}
+                    error={fieldErrors.abierto_hasta}
+                  >
+                    <input
+                      type="text"
+                      placeholder="Ej: 20:00 — vacío = consultar"
+                      value={form.abierto_hasta}
+                      onChange={(e) => update("abierto_hasta", e.target.value)}
+                      className="form-input"
+                    />
+                  </Field>
+                </div>
+
+                <Field
+                  label="¿Cómo describirías tu negocio? (elegí los que apliquen)"
+                  icon={<Info size={16} />}
+                  error={fieldErrors.tags}
+                >
+                  <div className="flex flex-wrap gap-2">
+                    {TAGS_DISPONIBLES.map((t) => {
+                      const on = form.tags.includes(t.id);
+                      return (
+                        <button
+                          key={t.id}
+                          type="button"
+                          onClick={() =>
+                            update(
+                              "tags",
+                              on ? form.tags.filter((x) => x !== t.id) : [...form.tags, t.id]
+                            )
+                          }
+                          aria-pressed={on}
+                          className="font-inter-tight rounded-full px-3 py-1.5 text-xs font-bold transition-all"
+                          style={{
+                            background: on ? "var(--valley)" : "var(--cream)",
+                            color: on ? "var(--cream)" : "var(--ink)",
+                            border: `1px solid ${on ? "var(--valley)" : "var(--border)"}`,
+                          }}
+                        >
+                          {t.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </Field>
+              </>
+            )}
 
             {activeTab === "evento" && (
               <div className="grid gap-8 md:grid-cols-2">
