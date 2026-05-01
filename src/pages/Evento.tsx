@@ -97,12 +97,16 @@ export default function Evento() {
     ? comercios.find((c) => c.slug === evento.comercioId || c.id === evento.comercioId)
     : undefined;
   // "Otros eventos": solo futuros — no mostramos eventos que ya pasaron.
+  // Para multidia, usamos fechaFin como cierre.
   const otros = (() => {
     const hoy = new Date();
     hoy.setHours(0, 0, 0, 0);
     return eventos
       .filter((e) => e.id !== evento.id)
-      .filter((e) => new Date(e.fecha + "T00:00:00").getTime() >= hoy.getTime())
+      .filter((e) => {
+        const cierre = e.fechaFin ?? e.fecha;
+        return new Date(cierre + "T00:00:00").getTime() >= hoy.getTime();
+      })
       .slice(0, 3);
   })();
 

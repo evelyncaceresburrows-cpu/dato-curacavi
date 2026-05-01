@@ -53,13 +53,15 @@ export default function Home() {
     .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
     .slice(0, 3);
 
-  // Próximo evento publicado y FUTURO. Antes mostraba eventos[0] que podia
-  // ser un evento de ayer. La feria de hoy o de mañana es lo que importa.
+  // Próximo evento publicado y FUTURO. Para eventos multidia (ej. Fiesta
+  // Chicha 30 abr-2 may) usamos fechaFin como cierre real, asi siguen
+  // visibles hasta que termine el ultimo dia.
   const proxEvento = (() => {
     const ahora = new Date();
     ahora.setHours(0, 0, 0, 0);
     return eventos.find((e) => {
-      const d = new Date(e.fecha + "T00:00:00");
+      const cierre = e.fechaFin ?? e.fecha;
+      const d = new Date(cierre + "T00:00:00");
       return d.getTime() >= ahora.getTime();
     });
   })();

@@ -457,7 +457,10 @@ export interface Evento {
   slug: string;
   titulo: string;
   descripcion: string;
-  fecha: string; // ISO "2026-05-25"
+  fecha: string; // ISO "2026-05-25" (inicio si es rango)
+  /** Fecha de cierre cuando el evento dura varios dias (ej. fiesta de la
+   *  chicha 30 abr → 2 may). Si null, evento de un solo dia. */
+  fechaFin?: string;
   hora: string; // "08:00"
   lugar: string;
   comercioId?: string;

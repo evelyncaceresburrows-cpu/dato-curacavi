@@ -21,7 +21,8 @@ interface EventoRow {
   slug: string;
   titulo: string;
   descripcion: string | null;
-  fecha: string; // YYYY-MM-DD
+  fecha: string; // YYYY-MM-DD (inicio si es rango)
+  fecha_fin: string | null; // YYYY-MM-DD del ultimo dia, si dura varios.
   hora: string | null; // HH:mm:ss
   lugar: string | null;
   comercio_id: string | null;
@@ -46,6 +47,7 @@ function rowToEvento(row: EventoRow): Evento {
     titulo: row.titulo,
     descripcion: row.descripcion ?? "",
     fecha: row.fecha,
+    fechaFin: row.fecha_fin ?? undefined,
     hora: (row.hora ?? "").slice(0, 5), // "HH:mm"
     lugar: row.lugar ?? "",
     comercioId: row.comercio_id ?? undefined,
@@ -103,7 +105,7 @@ async function fetchEventos(): Promise<Evento[]> {
   const { data, error } = await supabase
     .from("eventos")
     .select(
-      "id,slug,titulo,descripcion,fecha,hora,lugar,comercio_id,categoria,tags,chip_color,imagen,estado,gratis,precio_texto,recurrente,dias_semana"
+      "id,slug,titulo,descripcion,fecha,fecha_fin,hora,lugar,comercio_id,categoria,tags,chip_color,imagen,estado,gratis,precio_texto,recurrente,dias_semana"
     )
     .eq("publicado", true)
     .order("fecha", { ascending: true });

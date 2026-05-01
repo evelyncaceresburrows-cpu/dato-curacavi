@@ -52,7 +52,11 @@ export default function Agenda() {
   const eventosFuturos = useMemo(
     () =>
       eventos.filter((e) => {
-        const d = new Date(e.fecha + "T00:00:00");
+        // Para eventos de varios dias usamos fecha_fin como cierre real.
+        // Asi la Fiesta de la Chicha (30 abr - 2 may) sigue en "Proximos"
+        // hasta que termine el 2 de mayo.
+        const cierre = e.fechaFin ?? e.fecha;
+        const d = new Date(cierre + "T00:00:00");
         return d.getTime() >= hoy.getTime();
       }),
     [eventos, hoy]
@@ -89,14 +93,21 @@ export default function Agenda() {
 
   const diasConEvento = useMemo(() => {
     const set = new Set<number>();
-    // Marca solo eventos futuros — pasados no se resaltan.
+    // Marca todos los dias entre fecha y fechaFin (inclusive) que caigan
+    // en el mes mostrado. Asi la Fiesta de la Chicha 30 abr-2 may marca
+    // el 30 (en abril), 1 y 2 (en mayo) cuando se ve cada mes.
     eventosFuturos.forEach((e) => {
-      const d = new Date(e.fecha + "T00:00:00");
-      if (
-        d.getFullYear() === refDate.getFullYear() &&
-        d.getMonth() === refDate.getMonth()
-      ) {
-        set.add(d.getDate());
+      const inicio = new Date(e.fecha + "T00:00:00");
+      const fin = new Date((e.fechaFin ?? e.fecha) + "T00:00:00");
+      const d = new Date(inicio);
+      while (d.getTime() <= fin.getTime()) {
+        if (
+          d.getFullYear() === refDate.getFullYear() &&
+          d.getMonth() === refDate.getMonth()
+        ) {
+          set.add(d.getDate());
+        }
+        d.setDate(d.getDate() + 1);
       }
     });
     return set;
