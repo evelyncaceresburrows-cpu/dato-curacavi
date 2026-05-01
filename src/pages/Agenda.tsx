@@ -78,6 +78,14 @@ export default function Agenda() {
     refDate.getMonth() + 1,
     0
   ).getDate();
+  // Offset del primer dia del mes — JS getDay() devuelve 0 (dom) ... 6 (sab).
+  // Sin esto, el dia 1 caia siempre en columna Domingo y los dias visuales
+  // no coincidian con su dia real de la semana.
+  const offsetPrimerDia = new Date(
+    refDate.getFullYear(),
+    refDate.getMonth(),
+    1
+  ).getDay();
 
   const diasConEvento = useMemo(() => {
     const set = new Set<number>();
@@ -191,6 +199,10 @@ export default function Agenda() {
               >
                 {d}
               </div>
+            ))}
+            {/* Celdas vacias antes del dia 1 para alinearlo con su columna real. */}
+            {Array.from({ length: offsetPrimerDia }).map((_, i) => (
+              <div key={`empty-${i}`} aria-hidden style={{ aspectRatio: "1" }} />
             ))}
             {Array.from({ length: diasDelMes }, (_, i) => i + 1).map((dia) => {
               const tieneEvento = diasConEvento.has(dia);
