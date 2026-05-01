@@ -244,19 +244,28 @@ _Mantenga la calma. La ayuda está en camino._`;
 
         // ── Skill: RecomendadorDePicadas ────────────────────────────────────
         } else if (esPicada) {
-          // Buscamos si hay una respuesta específica en el KB local para este tema
-          const { respuesta: respuestaLocal } = buscarRespuestaLocal(textoUsuario);
-          
-          if (respuestaLocal) {
-            textoRespuesta = respuestaLocal;
-          } else {
-            // Fallback si detectó la skill pero no hay tema específico (intro con protocolo)
-            const cat = categoriaFiltro;
-            const busca = cat ? (cat === 'chicha' ? 'chicha' : cat === 'dulces' ? 'dulces típicos' : 'dónde comer') : 'datos del valle';
-            const recomienda = cat === 'dulces' ? 'Dulces Issa' : 'el directorio verificado';
-            const razon = cat === 'dulces' ? 'es de acá del valle y tiene tradición' : 'son locales chequeados en terreno';
-            
-            textoRespuesta = `Mire vecino, si busca **${busca}**, yo le recomiendo **${recomienda}** porque ${razon}.\n\nAquí le abro los locales que tengo verificados:`;
+          // Estrategia nueva: Gemini PRIMERO con system prompt corredor-amplio.
+          // Si Gemini falla (sin clave, sin red, cuota), cae al KB local
+          // hardcoded de Curacavi (ultimo recurso). El texto generado por
+          // Gemini se acompaña del card grid del skill (filtrable por
+          // categoria + comuna desde Supabase).
+          try {
+            textoRespuesta = await consultarGemini(textoUsuario, estado.mensajes);
+          } catch {
+            const { respuesta: respuestaLocal } = buscarRespuestaLocal(textoUsuario);
+            if (respuestaLocal) {
+              textoRespuesta = respuestaLocal;
+            } else {
+              const cat = categoriaFiltro;
+              const busca = cat
+                ? (cat === 'chicha' ? 'una buena vina o chicha' :
+                   cat === 'dulces' ? 'dulces tipicos del valle' :
+                   cat === 'cultura' ? 'panorama cultural en el corredor' :
+                   cat === 'panoramas' ? 'algo al aire libre en la ruta' :
+                   'donde comer')
+                : 'algo del corredor';
+              textoRespuesta = `Mira vecino, te dejo abajo lo que tengo verificado del corredor para "${busca}". Filtra por comuna o categoria para afinar.`;
+            }
           }
           skillDetectado = "picadas";
 
