@@ -19,7 +19,7 @@ import {
 
 import type { Categoria as CategoriaCanonica } from "@/data/seed";
 
-// Taxonomía que usa el copiloto del 68. Antes era subset chico de Curacaví.
+// Taxonomía que usa el copiloto de la 68. Antes era subset chico de Curacaví.
 // Ampliada para cubrir corredor completo: panoramas (caletas, miradores)
 // y cultura (museos, santuarios, ascensores Valpo).
 export type CategoriaComercio =

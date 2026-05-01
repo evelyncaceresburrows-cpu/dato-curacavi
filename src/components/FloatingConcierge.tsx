@@ -1,6 +1,6 @@
 /**
  * FloatingConcierge.tsx
- * Botón flotante + panel del Tu copiloto del 68.
+ * Botón flotante + panel del Tu copiloto de la 68.
  *
  * UX:
  * - Botón FAB en esquina inferior derecha (encima del tab bar mobile)
@@ -97,7 +97,7 @@ export default function FloatingConcierge() {
           maxHeight: "75dvh",
         }}
         role="dialog"
-        aria-label="Tu copiloto del 68"
+        aria-label="Tu copiloto de la 68"
         aria-modal="true"
       >
         {/* Header del panel */}
@@ -120,7 +120,7 @@ export default function FloatingConcierge() {
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-fraunces" style={{ fontSize: 15, fontWeight: 600, letterSpacing: "-0.015em", lineHeight: 1.1 }}>
-              Tu copiloto del 68
+              Tu copiloto de la 68
             </p>
             <p style={{ fontSize: 11, color: "rgba(245,240,230,0.7)" }}>
               Ruta 68 · Santiago → Valpo · Siempre disponible
@@ -168,7 +168,7 @@ export default function FloatingConcierge() {
           border: "none",
           cursor: "pointer",
         }}
-        aria-label={abierto ? "Cerrar copiloto" : "Abrir Tu copiloto del 68"}
+        aria-label={abierto ? "Cerrar copiloto" : "Abrir Tu copiloto de la 68"}
         aria-expanded={abierto}
       >
         {/* Punto de notificación */}
@@ -199,7 +199,7 @@ export default function FloatingConcierge() {
               className="font-inter-tight hidden sm:inline"
               style={{ fontSize: 14, fontWeight: 600 }}
             >
-              Tu copiloto del 68
+              Tu copiloto de la 68
             </span>
           </>
         )}

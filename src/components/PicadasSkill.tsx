@@ -1,6 +1,6 @@
 /**
  * PicadasSkill.tsx
- * Skill: RecomendadorDePicadas (Tu copiloto del 68)
+ * Skill: RecomendadorDePicadas (Tu copiloto de la 68)
  *
  * Disparador: "hambre", "donde comer", "chicha", "dulces", "vino", etc.
  * Lee comercios reales de Supabase via useComercios — antes leía sólo el
