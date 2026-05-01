@@ -4,7 +4,11 @@ import path from "node:path";
 
 export default defineConfig({
   plugins: [react()],
-  base: "./",
+  // base "/" (no "./") porque rutas anidadas como /lugar/:slug y
+  // /evento/:slug son SPA rewrites a /index.html. Con base "./", los
+  // assets se resuelven relativos a la URL: /lugar/assets/index.js → 404.
+  // Con base "/", siempre /assets/index.js → 200. (Apr 30 2026 fix.)
+  base: "/",
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"),
