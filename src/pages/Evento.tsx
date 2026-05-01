@@ -36,7 +36,13 @@ export default function Evento() {
   // sólo en Supabase salian como "Evento no encontrado".
   const { data: eventos = [] } = useEventos();
   const { data: comercios = [] } = useComercios();
-  const evento = eventos.find((e) => e.slug === slug || e.id === slug);
+  // Busqueda directa primero. Si el slug es de una ocurrencia de feria
+  // recurrente (ej "feria-curacavi-balmaceda-2026-05-09"), recortamos la
+  // fecha del final y buscamos por slug base ("feria-curacavi-balmaceda").
+  const slugBase = slug.replace(/-\d{4}-\d{2}-\d{2}$/, "");
+  const evento =
+    eventos.find((e) => e.slug === slug || e.id === slug) ||
+    eventos.find((e) => e.slug === slugBase || e.slug.startsWith(slugBase + "-"));
 
   useEffect(() => {
     if (evento) {

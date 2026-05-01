@@ -32,6 +32,11 @@ interface EventoRow {
   estado: EstadoDato;
   gratis: boolean | null;
   precio_texto: string | null;
+  /** Eventos recurrentes (ferias semanales): si true, expandimos a las
+   *  proximas 4 ocurrencias usando dias_semana. */
+  recurrente: boolean | null;
+  /** Dias de la semana (0=dom .. 6=sab). Solo se usa si recurrente=true. */
+  dias_semana: number[] | null;
 }
 
 function rowToEvento(row: EventoRow): Evento {
@@ -54,6 +59,34 @@ function rowToEvento(row: EventoRow): Evento {
   };
 }
 
+/** Para un evento recurrente devuelve sus proximas N ocurrencias como
+ *  eventos individuales (con slug y fecha distintos). N=4 por defecto.
+ *  Para no-recurrentes devuelve [evento] sin cambios. */
+function expandirRecurrentes(row: EventoRow, evento: Evento, n = 4): Evento[] {
+  if (!row.recurrente || !row.dias_semana || row.dias_semana.length === 0) {
+    return [evento];
+  }
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+  const out: Evento[] = [];
+  // Iteramos hasta 60 dias para juntar n ocurrencias.
+  for (let i = 0; i < 60 && out.length < n; i++) {
+    const d = new Date(hoy);
+    d.setDate(hoy.getDate() + i);
+    if (row.dias_semana.includes(d.getDay())) {
+      const fechaIso = d.toISOString().slice(0, 10);
+      out.push({
+        ...evento,
+        // Slug compuesto para que sea unico en el calendario.
+        slug: `${evento.slug}-${fechaIso}`,
+        fecha: fechaIso,
+        // Mantenemos el id original para que /evento/:slug lleve a la ficha base.
+      });
+    }
+  }
+  return out.length > 0 ? out : [evento];
+}
+
 function ordenarEventos(lista: Evento[]): Evento[] {
   return [...lista].sort((a, b) => {
     if (a.fecha !== b.fecha) return a.fecha.localeCompare(b.fecha);
@@ -70,7 +103,7 @@ async function fetchEventos(): Promise<Evento[]> {
   const { data, error } = await supabase
     .from("eventos")
     .select(
-      "id,slug,titulo,descripcion,fecha,hora,lugar,comercio_id,categoria,tags,chip_color,imagen,estado,gratis,precio_texto"
+      "id,slug,titulo,descripcion,fecha,hora,lugar,comercio_id,categoria,tags,chip_color,imagen,estado,gratis,precio_texto,recurrente,dias_semana"
     )
     .eq("publicado", true)
     .order("fecha", { ascending: true });
@@ -80,7 +113,13 @@ async function fetchEventos(): Promise<Evento[]> {
     return ordenarEventos(EVENTOS);
   }
 
-  return ordenarEventos((data as EventoRow[]).map(rowToEvento));
+  // Expandir eventos recurrentes a sus proximas 4 ocurrencias.
+  const expandidos: Evento[] = [];
+  for (const row of data as EventoRow[]) {
+    const ev = rowToEvento(row);
+    expandidos.push(...expandirRecurrentes(row, ev, 4));
+  }
+  return ordenarEventos(expandidos);
 }
 
 export function useEventos() {
