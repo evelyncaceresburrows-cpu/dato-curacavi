@@ -12,7 +12,8 @@
 import { useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { ChevronLeft, MapPin, Clock, CalendarDays, Ticket } from "lucide-react";
-import { eventoBySlug, comercioBySlug, EVENTOS } from "@/data/seed";
+import { useEventos } from "@/data/hooks/useEventos";
+import { useComercios } from "@/data/hooks/useComercios";
 import { SEO } from "@/components/SEO";
 import { eventoLd, breadcrumbLd } from "@/lib/seoLd";
 import { track, Events } from "@/lib/analytics";
@@ -30,7 +31,12 @@ const ETIQUETA_CATEGORIA: Record<string, string> = {
 export default function Evento() {
   const { slug = "" } = useParams();
   const navigate = useNavigate();
-  const evento = eventoBySlug(slug);
+  // Usar useEventos() para leer Supabase + seed unificado. Antes buscaba
+  // sólo en EVENTOS local → la Feria Libre y eventos del corredor que viven
+  // sólo en Supabase salian como "Evento no encontrado".
+  const { data: eventos = [] } = useEventos();
+  const { data: comercios = [] } = useComercios();
+  const evento = eventos.find((e) => e.slug === slug || e.id === slug);
 
   useEffect(() => {
     if (evento) {
@@ -81,8 +87,10 @@ export default function Evento() {
     );
   }
 
-  const organizador = evento.comercioId ? comercioBySlug(evento.comercioId) : undefined;
-  const otros = EVENTOS.filter((e) => e.id !== evento.id).slice(0, 3);
+  const organizador = evento.comercioId
+    ? comercios.find((c) => c.slug === evento.comercioId || c.id === evento.comercioId)
+    : undefined;
+  const otros = eventos.filter((e) => e.id !== evento.id).slice(0, 3);
 
   const isUrl =
     evento.imagen.startsWith("http") || evento.imagen.startsWith("/");
