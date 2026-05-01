@@ -36,6 +36,9 @@ export interface ComercioRuta extends Comercio {
   eje_ruta_km?: number;
   tiempo_visita_min?: number;
   precio_clp_aprox?: number;
+  /** true si el precio es estimado por categoria; false si lo verificamos
+   *  online o lo cargo el socio. */
+  precio_es_estimado?: boolean;
   tags?: string[];
 }
 
@@ -56,6 +59,9 @@ export interface Parada {
   eje_ruta_km: number;
   tiempo_visita_min: number;
   costo_clp: number;
+  /** true si el costo viene del default por categoria, no de un dato real
+   *  verificado. La UI lo prefija con "aprox" cuando es true. */
+  costo_es_estimado: boolean;
   eta_min: number;            // minutos desde el km anterior
   tiempo_acum_min: number;
   costo_acum_clp: number;
@@ -292,6 +298,7 @@ export function armarRuta(
       eje_ruta_km: km,
       tiempo_visita_min: visita,
       costo_clp: costo,
+      costo_es_estimado: c.precio_es_estimado !== false,
       eta_min: Math.round(eta),
       tiempo_acum_min: Math.round(tiempoAcum),
       costo_acum_clp: costoAcum,

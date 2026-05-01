@@ -68,6 +68,11 @@ const TAGS_DISPONIBLES: { id: string; label: string; grupo: string }[] = [
 const fmtClp = (v: number) =>
   v === 0 ? "Gratis" : `$${v.toLocaleString("es-CL")}`;
 
+/** Para precios de paradas: agrega "aprox" cuando es estimado por categoria.
+ *  Para gratis (0) nunca decimos "aprox" — gratis es siempre cierto. */
+const fmtClpParada = (v: number, estimado: boolean) =>
+  v === 0 ? "Gratis" : `${estimado ? "aprox " : ""}$${v.toLocaleString("es-CL")}`;
+
 const fmtMin = (v: number) => {
   if (v < 60) return `${v} min`;
   const h = Math.floor(v / 60);
@@ -415,7 +420,11 @@ export default function Ruta() {
                   <ResumenCelda
                     icon={<DollarSign size={14} />}
                     label="Costo"
-                    valor={fmtClp(resultado.total_clp)}
+                    valor={
+                      resultado.paradas.some((p) => p.costo_es_estimado && p.costo_clp > 0)
+                        ? `aprox ${fmtClp(resultado.total_clp)}`
+                        : fmtClp(resultado.total_clp)
+                    }
                   />
                   <ResumenCelda
                     icon={<MapPin size={14} />}
@@ -475,8 +484,11 @@ export default function Ruta() {
                           <span className="inline-flex items-center gap-1 rounded-full bg-arena px-2.5 py-1">
                             <Clock size={12} /> {fmtMin(p.tiempo_visita_min)}
                           </span>
-                          <span className="inline-flex items-center gap-1 rounded-full bg-arena px-2.5 py-1">
-                            <Wallet size={12} /> {fmtClp(p.costo_clp)}
+                          <span
+                            className="inline-flex items-center gap-1 rounded-full bg-arena px-2.5 py-1"
+                            title={p.costo_es_estimado ? "Precio estimado por categoría — el local cotiza al momento" : "Precio verificado"}
+                          >
+                            <Wallet size={12} /> {fmtClpParada(p.costo_clp, p.costo_es_estimado)}
                           </span>
                           {idx > 0 && (
                             <span className="inline-flex items-center gap-1 rounded-full bg-arena px-2.5 py-1">

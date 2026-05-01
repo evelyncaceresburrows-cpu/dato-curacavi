@@ -49,6 +49,9 @@ interface ComercioRow {
   eje_ruta_km: number | null;
   tiempo_visita_min: number | null;
   precio_clp_aprox: number | null;
+  /** true si el precio es estimado por categoria; false si lo verificamos
+   *  online o lo cargo el socio. La UI marca "aprox" cuando es true. */
+  precio_es_estimado: boolean | null;
   /** Tags asociados via comercio_tags pivot, vienen como array de ids. */
   tags: string[] | null;
 }
@@ -88,6 +91,7 @@ function rowToComercio(row: ComercioRow): Comercio {
       eje_ruta_km: row.eje_ruta_km ?? undefined,
       tiempo_visita_min: row.tiempo_visita_min ?? undefined,
       precio_clp_aprox: row.precio_clp_aprox ?? undefined,
+      precio_es_estimado: row.precio_es_estimado ?? true,
       tags: row.tags ?? [],
     } as Partial<Comercio>),
   };
@@ -102,7 +106,7 @@ async function fetchComercios(): Promise<Comercio[]> {
   const { data, error } = await supabase
     .from("v_comercios_busqueda")
     .select(
-      "id,slug,nombre,categoria,subtitulo,descripcion,direccion,telefono,whatsapp,web,email,precio,rating,reviews,estado,imagen,comuna_id,eje_ruta_km,tiempo_visita_min,precio_clp_aprox,tags,lat,lng"
+      "id,slug,nombre,categoria,subtitulo,descripcion,direccion,telefono,whatsapp,web,email,precio,rating,reviews,estado,imagen,comuna_id,eje_ruta_km,tiempo_visita_min,precio_clp_aprox,precio_es_estimado,tags,lat,lng"
     );
 
   if (error || !data || data.length === 0) {
