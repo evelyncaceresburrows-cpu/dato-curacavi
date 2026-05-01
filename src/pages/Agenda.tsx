@@ -42,13 +42,31 @@ export default function Agenda() {
   const { data: eventos = [] } = useEventos();
   const [filtro, setFiltro] = useState<"todos" | CategoriaEvento>("todos");
 
-  const eventosFiltrados = useMemo(
-    () => (filtro === "todos" ? eventos : eventos.filter((e) => e.categoria === filtro)),
-    [eventos, filtro]
+  // Filtra eventos pasados (con tolerancia de 1 dia para el evento de hoy mismo).
+  // Antes mostrabamos eventos que ya pasaron en "Proximos eventos" — confuso.
+  const hoy = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
+  const eventosFuturos = useMemo(
+    () =>
+      eventos.filter((e) => {
+        const d = new Date(e.fecha + "T00:00:00");
+        return d.getTime() >= hoy.getTime();
+      }),
+    [eventos, hoy]
   );
 
-  // Mes que mostramos en el mini-calendario: el del primer evento próximo (o hoy si no hay).
-  const refDate = eventos[0] ? new Date(eventos[0].fecha + "T00:00:00") : new Date();
+  const eventosFiltrados = useMemo(
+    () => (filtro === "todos" ? eventosFuturos : eventosFuturos.filter((e) => e.categoria === filtro)),
+    [eventosFuturos, filtro]
+  );
+
+  // Mes del mini-calendario: SIEMPRE el mes actual. Antes saltaba al mes
+  // del primer evento — si tenias evento en Abril y hoy era Mayo, abria
+  // mostrando Abril (mes pasado). Confuso.
+  const refDate = useMemo(() => new Date(), []);
   const mesNombre = refDate.toLocaleDateString("es-CL", {
     month: "long",
     year: "numeric",
@@ -63,7 +81,8 @@ export default function Agenda() {
 
   const diasConEvento = useMemo(() => {
     const set = new Set<number>();
-    eventos.forEach((e) => {
+    // Marca solo eventos futuros — pasados no se resaltan.
+    eventosFuturos.forEach((e) => {
       const d = new Date(e.fecha + "T00:00:00");
       if (
         d.getFullYear() === refDate.getFullYear() &&
@@ -73,8 +92,7 @@ export default function Agenda() {
       }
     });
     return set;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [eventos]);
+  }, [eventosFuturos, refDate]);
 
   return (
     <div style={{ background: "var(--cream)" }} className="min-h-screen pb-32 md:pb-16">

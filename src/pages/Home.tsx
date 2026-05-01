@@ -53,8 +53,16 @@ export default function Home() {
     .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
     .slice(0, 3);
 
-  // Próximo evento publicado.
-  const proxEvento = eventos[0];
+  // Próximo evento publicado y FUTURO. Antes mostraba eventos[0] que podia
+  // ser un evento de ayer. La feria de hoy o de mañana es lo que importa.
+  const proxEvento = (() => {
+    const ahora = new Date();
+    ahora.setHours(0, 0, 0, 0);
+    return eventos.find((e) => {
+      const d = new Date(e.fecha + "T00:00:00");
+      return d.getTime() >= ahora.getTime();
+    });
+  })();
 
   // Categorías home, filtrando vacías (sin comercios publicados).
   const categoriasHome = (() => {
