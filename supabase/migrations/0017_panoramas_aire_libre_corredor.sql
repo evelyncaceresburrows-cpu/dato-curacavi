@@ -1,0 +1,16 @@
+-- 0017_panoramas_aire_libre_corredor.sql
+-- 9 panoramas al aire libre del corredor (Curacavi + Casablanca + Quintay
+-- + Las Dichas), todos categoria=panoramas, verificados.
+-- Fuentes: Municipalidades, Chile es Tuyo, TripAdvisor, SERNATUR.
+-- Verificado: mayo 2026.
+--
+-- Curacavi: Parque San Mateo, Cerro El Mauco (1.472 msnm), Cerro
+-- Bustamante, Camino El Toro, Rio Puangue.
+-- Casablanca: Parque Bienestar Pitama (privado, embalse + kayak +
+-- cabalgata), Valle de Casablanca Ruta del Vino (senderismo entre
+-- viñedos, 4.6/5 TripAdvisor).
+-- Quintay: Playas de Quintay (buceo + balleneras patrimoniales).
+-- Las Dichas: Playa Las Dichas (familia).
+--
+-- (Detalle del INSERT esta aplicado en Supabase via MCP — slug, telefonos,
+-- coordenadas, tags y descripciones completas.)
