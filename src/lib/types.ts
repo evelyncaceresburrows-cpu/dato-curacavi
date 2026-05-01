@@ -116,6 +116,8 @@ export function contarPorCategoria(
     picadas: 0,
     dulces: 0,
     chicha: 0,
+    panoramas: 0,
+    cultura: 0,
     tramites: 0,
     emergencias: 0,
   };
