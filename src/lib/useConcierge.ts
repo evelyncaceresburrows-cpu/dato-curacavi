@@ -77,13 +77,20 @@ function matchKw(texto: string, keywords: readonly string[]): boolean {
 
 /** Detecta categoría específica en el mensaje (cubre todo el corredor:
  *  no sólo Curacaví — también Casablanca viñas, museos Valpo, panoramas
- *  Algarrobo/Quintay, etc.). */
+ *  Algarrobo/Quintay, etc.).
+ *
+ *  Las keywords se chequean en orden de especificidad: panorama/cultura
+ *  van antes de dulces porque "panorama" contiene "pan" y antes hacían
+ *  match falso → "dulces".
+ */
 function detectarCategoriaPicada(texto: string): CategoriaComercio | undefined {
   const n = normalizarTexto(texto);
-  if (n.includes("vina") || n.includes("vino") || n.includes("cata") || n.includes("chicha") || n.includes("moscatel") || n.includes("espumante")) return "chicha";
-  if (n.includes("dulce") || n.includes("empolvado") || n.includes("alfajor") || n.includes("pan") || n.includes("kuchen")) return "dulces";
-  if (n.includes("museo") || n.includes("cultura") || n.includes("neruda") || n.includes("ascensor") || n.includes("santuario") || n.includes("patrimonio")) return "cultura";
+  // Panoramas y cultura primero (palabras compuestas que contienen "pan").
   if (n.includes("panorama") || n.includes("paseo") || n.includes("playa") || n.includes("caleta") || n.includes("mirador") || n.includes("trekking") || n.includes("naturaleza")) return "panoramas";
+  if (n.includes("museo") || n.includes("cultura") || n.includes("neruda") || n.includes("ascensor") || n.includes("santuario") || n.includes("patrimonio")) return "cultura";
+  if (n.includes("vina") || n.includes("vino") || n.includes("cata") || n.includes("chicha") || n.includes("moscatel") || n.includes("espumante")) return "chicha";
+  // Dulces: usamos "\bpan\b" (palabra completa) para no matchear "panorama".
+  if (n.includes("dulce") || n.includes("empolvado") || n.includes("alfajor") || /\bpan(es)?\b/.test(n) || n.includes("kuchen") || n.includes("panaderia")) return "dulces";
   if (n.includes("picada") || n.includes("restoran") || n.includes("parrilla") || n.includes("almuerz") || n.includes("comer") || n.includes("comida") || n.includes("hambre") || n.includes("empanad") || n.includes("marisco") || n.includes("pescado") || n.includes("erizo") || n.includes("loco")) return "picadas";
   if (n.includes("tramite") || n.includes("muni") || n.includes("farmacia") || n.includes("permiso")) return "tramites";
   return undefined;
