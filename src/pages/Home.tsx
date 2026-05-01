@@ -484,7 +484,7 @@ export default function Home() {
                       ? "siempre"
                       : c.abiertoHasta
                       ? "abierto"
-                      : "cerrado"
+                      : "desconocido"
                   }
                   cierra={c.abiertoHasta}
                 />

@@ -229,7 +229,7 @@ export default function Lugar() {
                   ? "siempre"
                   : comercio.abiertoHasta
                   ? "abierto"
-                  : "cerrado"
+                  : "desconocido"
               }
               cierra={comercio.abiertoHasta}
             />

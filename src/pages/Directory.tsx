@@ -365,7 +365,7 @@ function ComercioRow({
                   ? "siempre"
                   : comercio.abiertoHasta
                   ? "abierto"
-                  : "cerrado"
+                  : "desconocido"
               }
               cierra={comercio.abiertoHasta}
             />
