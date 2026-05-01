@@ -147,6 +147,7 @@ interface Props {
   mostrarPicadas: boolean;
   mostrarInscripcion: boolean;
   categoriaFiltroActiva: CategoriaComercio | undefined;
+  comunaFiltroActiva?: string;
   onEnviar: (texto: string) => void;
   onCerrarSeguridad: () => void;
   onCerrarPicadas: () => void;
@@ -161,6 +162,7 @@ export default function ConciergePanel({
   mostrarPicadas,
   mostrarInscripcion,
   categoriaFiltroActiva,
+  comunaFiltroActiva,
   onEnviar,
   onCerrarSeguridad,
   onCerrarPicadas,
@@ -214,6 +216,7 @@ export default function ConciergePanel({
       {mostrarPicadas && (
         <PicadasSkill
           categoriaInicial={categoriaFiltroActiva}
+          comunaInicial={comunaFiltroActiva}
           onCerrar={onCerrarPicadas}
         />
       )}

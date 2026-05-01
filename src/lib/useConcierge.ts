@@ -55,6 +55,10 @@ export interface EstadoConcierge {
   mostrarPicadas: boolean;
   mostrarInscripcion: boolean;
   categoriaFiltroActiva: CategoriaComercio | undefined;
+  /** Comuna detectada en la pregunta del vecino (curacavi, casablanca,
+   *  algarrobo, quintay, valparaiso, maria_pinto). Pasada al skill para
+   *  que filtre las cards a esa comuna automaticamente. */
+  comunaFiltroActiva: string | undefined;
 }
 
 // ─── Utilidades ──────────────────────────────────────────────────────────────
@@ -82,6 +86,21 @@ function detectarCategoriaPicada(texto: string): CategoriaComercio | undefined {
   if (n.includes("panorama") || n.includes("paseo") || n.includes("playa") || n.includes("caleta") || n.includes("mirador") || n.includes("trekking") || n.includes("naturaleza")) return "panoramas";
   if (n.includes("picada") || n.includes("restoran") || n.includes("parrilla") || n.includes("almuerz") || n.includes("comer") || n.includes("comida") || n.includes("hambre") || n.includes("empanad") || n.includes("marisco") || n.includes("pescado") || n.includes("erizo") || n.includes("loco")) return "picadas";
   if (n.includes("tramite") || n.includes("muni") || n.includes("farmacia") || n.includes("permiso")) return "tramites";
+  return undefined;
+}
+
+/** Detecta comuna mencionada en el mensaje del vecino. Devuelve el id
+ *  de comuna (curacavi, casablanca, etc.) o undefined si no detecta. */
+function detectarComuna(texto: string): string | undefined {
+  const n = normalizarTexto(texto);
+  if (n.includes("casablanca")) return "casablanca";
+  if (n.includes("algarrobo")) return "algarrobo";
+  if (n.includes("quintay")) return "quintay";
+  if (n.includes("valparaiso") || n.includes("valpo") || n.includes("cerros")) return "valparaiso";
+  if (n.includes("maria pinto")) return "maria_pinto";
+  if (n.includes("pudahuel")) return "pudahuel";
+  if (n.includes("placilla")) return "placilla";
+  if (n.includes("curacavi")) return "curacavi";
   return undefined;
 }
 
@@ -192,6 +211,7 @@ export function useConcierge() {
     mostrarPicadas: false,
     mostrarInscripcion: false,
     categoriaFiltroActiva: undefined,
+    comunaFiltroActiva: undefined,
   });
 
   const enviarMensaje = useCallback(
@@ -213,6 +233,9 @@ export function useConcierge() {
       const esPicada = !esEmergencia && !tieneNoVerificado && matchKw(textoUsuario, KEYWORDS_PICADAS);
       const esInscripcion = !esEmergencia && matchKw(textoUsuario, KEYWORDS_INSCRIPCION);
       const categoriaFiltro = esPicada ? detectarCategoriaPicada(textoUsuario) : undefined;
+      // Comuna detectada en cada pregunta — se resetea a undefined si la
+      // pregunta no la menciona (no se sostiene entre mensajes).
+      const comunaFiltro = esPicada ? detectarComuna(textoUsuario) : undefined;
 
       setEstado((prev) => ({
         ...prev,
@@ -221,7 +244,11 @@ export function useConcierge() {
         mostrarWidgetSeguridad: esEmergencia ? true : prev.mostrarWidgetSeguridad,
         mostrarPicadas: esPicada ? true : prev.mostrarPicadas,
         mostrarInscripcion: esInscripcion ? true : prev.mostrarInscripcion,
-        categoriaFiltroActiva: esPicada ? (categoriaFiltro ?? prev.categoriaFiltroActiva) : prev.categoriaFiltroActiva,
+        // Cuando es picada, sobreescribimos con lo detectado (incluso si es
+        // undefined → resetea a "Todas"). Si NO es picada, preservamos el
+        // ultimo valor (el panel sigue mostrando lo previo).
+        categoriaFiltroActiva: esPicada ? categoriaFiltro : prev.categoriaFiltroActiva,
+        comunaFiltroActiva: esPicada ? comunaFiltro : prev.comunaFiltroActiva,
       }));
 
       try {
@@ -364,6 +391,7 @@ _Mantenga la calma. La ayuda está en camino._`;
       mostrarPicadas: false,
       mostrarInscripcion: false,
       categoriaFiltroActiva: undefined,
+      comunaFiltroActiva: undefined,
     });
   }, []);
 

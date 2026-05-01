@@ -199,15 +199,29 @@ function TarjetaComercio({ c }: { c: ComercioConRuta }) {
 interface Props {
   /** Categoría inicial (cuando el copiloto detecta "vino" → chicha, etc.). */
   categoriaInicial?: Categoria;
+  /** Comuna inicial (cuando el copiloto detecta "Casablanca" en la pregunta). */
+  comunaInicial?: string;
   onCerrar?: () => void;
 }
 
-export default function PicadasSkill({ categoriaInicial, onCerrar }: Props) {
+export default function PicadasSkill({ categoriaInicial, comunaInicial, onCerrar }: Props) {
   const { data: comercios = [] } = useComercios();
   const [catActiva, setCatActiva] = React.useState<Categoria | "todas">(
     categoriaInicial ?? "todas"
   );
-  const [comunaActiva, setComunaActiva] = React.useState<string>("todas");
+  const [comunaActiva, setComunaActiva] = React.useState<string>(
+    comunaInicial ?? "todas"
+  );
+
+  // Sincroniza filtros con lo detectado por el copiloto cada vez que cambia
+  // el contexto (nueva pregunta). Antes el filtro se quedaba pegado en
+  // "viñas" aunque el vecino preguntara después por museos en Valpo.
+  React.useEffect(() => {
+    setCatActiva(categoriaInicial ?? "todas");
+  }, [categoriaInicial]);
+  React.useEffect(() => {
+    setComunaActiva(comunaInicial ?? "todas");
+  }, [comunaInicial]);
 
   // Filtra por categoría + comuna + estado verificado/socio_pro (saca por_confirmar y emergencias).
   const filtrados = React.useMemo(() => {

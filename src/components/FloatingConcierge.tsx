@@ -31,6 +31,7 @@ export default function FloatingConcierge() {
     mostrarPicadas,
     mostrarInscripcion,
     categoriaFiltroActiva,
+    comunaFiltroActiva,
     enviarMensaje,
     cerrarWidgetSeguridad,
     cerrarPicadas,
@@ -145,6 +146,7 @@ export default function FloatingConcierge() {
           mostrarPicadas={mostrarPicadas}
           mostrarInscripcion={mostrarInscripcion}
           categoriaFiltroActiva={categoriaFiltroActiva}
+          comunaFiltroActiva={comunaFiltroActiva}
           onEnviar={enviarMensaje}
           onCerrarSeguridad={cerrarWidgetSeguridad}
           onCerrarPicadas={cerrarPicadas}
