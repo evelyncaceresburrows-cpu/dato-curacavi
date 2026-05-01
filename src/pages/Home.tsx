@@ -411,7 +411,11 @@ export default function Home() {
               <div
                 style={{
                   height: 130,
-                  background: c.imagen,
+                  // Si imagen es URL http(s) usamos url(); si no, asumimos
+                  // que es un gradiente CSS (linear-gradient, etc).
+                  background: /^https?:\/\//.test(c.imagen)
+                    ? `url("${c.imagen}") center/cover no-repeat`
+                    : c.imagen,
                   position: "relative",
                   backgroundSize: "cover",
                   backgroundPosition: "center",
