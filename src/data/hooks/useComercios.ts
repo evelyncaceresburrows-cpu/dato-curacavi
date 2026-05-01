@@ -123,5 +123,10 @@ export function useComercios() {
     gcTime: 30 * 60 * 1000,
     // Siempre devolvemos algo usable aunque Supabase caiga.
     initialData: ordenarComercios(COMERCIOS),
+    // ⚠ initialDataUpdatedAt: 0 hace que React Query trate la semilla como
+    // stale al montar — sin esto, la semilla se considera "fresca" y nunca
+    // dispara fetchComercios → /ruta nunca ve los tags reales de Supabase.
+    initialDataUpdatedAt: 0,
+    refetchOnMount: "always",
   });
 }
