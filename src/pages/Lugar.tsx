@@ -25,7 +25,8 @@ import {
   Clock,
   MapPin,
 } from "lucide-react";
-import { comercioBySlug, categoriaDef, COMERCIOS } from "@/data/seed";
+import { categoriaDef } from "@/data/seed";
+import { useComercios } from "@/data/hooks/useComercios";
 import { SEO } from "@/components/SEO";
 import { localBusinessLd, breadcrumbLd } from "@/lib/seoLd";
 import { track, Events } from "@/lib/analytics";
@@ -36,7 +37,11 @@ import { BusinessCard } from "@/components/lovable/BusinessCard";
 export default function Lugar() {
   const { slug = "" } = useParams();
   const navigate = useNavigate();
-  const comercio = comercioBySlug(slug);
+  // Usar useComercios() para leer Supabase + seed unificado. Antes buscaba
+  // sólo en COMERCIOS local → comercios del corredor (Casas del Bosque,
+  // Caleta Quintay, etc.) salian como "Lugar no encontrado".
+  const { data: comercios = [] } = useComercios();
+  const comercio = comercios.find((c) => c.slug === slug || c.id === slug);
   const [enRuta, setEnRuta] = useState(false);
 
   useEffect(() => {
@@ -89,9 +94,9 @@ export default function Lugar() {
   }
 
   const cat = categoriaDef(comercio.categoria);
-  const relacionados = COMERCIOS.filter(
-    (c) => c.categoria === comercio.categoria && c.id !== comercio.id
-  ).slice(0, 3);
+  const relacionados = comercios
+    .filter((c) => c.categoria === comercio.categoria && c.id !== comercio.id)
+    .slice(0, 3);
 
   const tel = comercio.telefono?.replace(/[^\d+*]/g, "");
   const wa = comercio.whatsapp?.replace(/[^\d+]/g, "");
