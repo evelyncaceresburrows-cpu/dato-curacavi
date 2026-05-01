@@ -80,10 +80,13 @@ const fmtMin = (v: number) => {
 export default function Ruta() {
   const [origen, setOrigen] = useState<ArmarRutaInput["origen"]>("santiago");
   const [direccion, setDireccion] = useState<ArmarRutaInput["direccion"]>("ida");
-  const [tiempoMin, setTiempoMin] = useState(240);
-  const [presupuestoClp, setPresupuestoClp] = useState(40000);
+  // Defaults coherentes con los datos reales: 30 comercios distribuidos
+  // km 11→110, mayoria en Curacavi (km 43) + viñas Casablanca (km 75-80).
+  // Un domingo "tipo" sale 3h de tiempo, $25k presupuesto, 3 paradas.
+  const [tiempoMin, setTiempoMin] = useState(180);
+  const [presupuestoClp, setPresupuestoClp] = useState(25000);
   const [tagsSel, setTagsSel] = useState<string[]>([]);
-  const [maxParadas, setMaxParadas] = useState(4);
+  const [maxParadas, setMaxParadas] = useState(3);
   const [calculado, setCalculado] = useState(false);
 
   const { data: comercios = [] } = useComercios();
