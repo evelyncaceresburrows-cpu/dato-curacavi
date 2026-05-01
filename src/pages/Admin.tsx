@@ -44,6 +44,7 @@ interface ComercioRow {
   publicado: boolean;
   rating: number | null;
   comuna_id: string | null;
+  estado: "socio_pro" | "verificado" | "por_confirmar";
 }
 
 interface EventoRow {
@@ -318,7 +319,7 @@ function ComerciosAdmin() {
     setLoading(true);
     const { data } = await supabase
       .from("comercios")
-      .select("id, slug, nombre, categoria, subtitulo, imagen, publicado, rating, comuna_id")
+      .select("id, slug, nombre, categoria, subtitulo, imagen, publicado, rating, comuna_id, estado")
       .order("nombre");
     setRows((data as ComercioRow[]) ?? []);
     setLoading(false);
@@ -344,6 +345,22 @@ function ComerciosAdmin() {
     const { error } = await supabase
       .from("comercios")
       .update({ publicado: !row.publicado })
+      .eq("id", row.id);
+    if (error) {
+      alert("Error: " + error.message);
+      return;
+    }
+    reload();
+  }
+
+  /** Mueve un comercio de "por_confirmar" a "verificado" + lo publica.
+   *  Atajo para no entrar al editor cuando el admin sólo quiere aprobar
+   *  rápido un comercio que vino de /publica. */
+  async function aprobar(row: ComercioRow) {
+    if (!supabase) return;
+    const { error } = await supabase
+      .from("comercios")
+      .update({ estado: "verificado", publicado: true })
       .eq("id", row.id);
     if (error) {
       alert("Error: " + error.message);
@@ -432,26 +449,69 @@ function ComerciosAdmin() {
                 </td>
                 <td className="p-3 font-inter-tight" style={{ color: "var(--ink)" }}>{r.categoria}</td>
                 <td className="p-3">
-                  <button
-                    type="button"
-                    onClick={() => togglePublicado(r)}
-                    className="font-inter-tight inline-flex items-center gap-1 rounded-full"
-                    style={{
-                      background: r.publicado ? "rgba(63,123,71,0.15)" : "rgba(31,26,20,0.08)",
-                      color: r.publicado ? "var(--valley-mid)" : "var(--muted)",
-                      padding: "4px 10px",
-                      fontSize: 11,
-                      fontWeight: 700,
-                      border: "none",
-                      letterSpacing: "0.04em",
-                    }}
-                  >
-                    {r.publicado ? <Eye size={11} /> : <EyeOff size={11} />}
-                    {r.publicado ? "Publicado" : "Oculto"}
-                  </button>
+                  <div className="flex flex-col gap-1">
+                    <button
+                      type="button"
+                      onClick={() => togglePublicado(r)}
+                      className="font-inter-tight inline-flex items-center gap-1 rounded-full"
+                      style={{
+                        background: r.publicado ? "rgba(63,123,71,0.15)" : "rgba(31,26,20,0.08)",
+                        color: r.publicado ? "var(--valley-mid)" : "var(--muted)",
+                        padding: "4px 10px",
+                        fontSize: 11,
+                        fontWeight: 700,
+                        border: "none",
+                        letterSpacing: "0.04em",
+                      }}
+                    >
+                      {r.publicado ? <Eye size={11} /> : <EyeOff size={11} />}
+                      {r.publicado ? "Publicado" : "Oculto"}
+                    </button>
+                    <span
+                      className="font-inter-tight inline-flex items-center justify-center rounded-full"
+                      style={{
+                        background:
+                          r.estado === "socio_pro"
+                            ? "rgba(244,194,74,0.20)"
+                            : r.estado === "verificado"
+                            ? "rgba(63,123,71,0.10)"
+                            : "rgba(200,98,58,0.15)",
+                        color:
+                          r.estado === "socio_pro"
+                            ? "var(--sun)"
+                            : r.estado === "verificado"
+                            ? "var(--valley-mid)"
+                            : "var(--terracotta)",
+                        padding: "2px 8px",
+                        fontSize: 10,
+                        fontWeight: 700,
+                        letterSpacing: "0.04em",
+                      }}
+                    >
+                      {r.estado === "socio_pro" ? "★ Socio" : r.estado === "verificado" ? "Verificado" : "Por confirmar"}
+                    </span>
+                  </div>
                 </td>
                 <td className="p-3">
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
+                    {r.estado === "por_confirmar" && (
+                      <button
+                        type="button"
+                        onClick={() => aprobar(r)}
+                        title="Aprobar y publicar"
+                        className="font-inter-tight inline-flex items-center gap-1 rounded-lg"
+                        style={{
+                          background: "var(--valley)",
+                          border: "none",
+                          color: "var(--cream)",
+                          padding: "6px 10px",
+                          fontSize: 11,
+                          fontWeight: 700,
+                        }}
+                      >
+                        ✓ Aprobar
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() => setEditing(r)}
@@ -893,6 +953,14 @@ function ComercioEditor({
 function EventosAdmin() {
   const [rows, setRows] = useState<EventoRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState<EventoRow | null>(null);
+
+  // Hoy a las 00:00 — eventos con fecha < hoy son "Pasados".
+  const hoy = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
 
   async function reload() {
     if (!supabase) return;
@@ -927,7 +995,7 @@ function EventosAdmin() {
   return (
     <div>
       <p className="font-inter-tight mb-4" style={{ fontSize: 13, color: "var(--muted)" }}>
-        {rows.length} eventos. Para crear o editar campos avanzados de eventos, usar Supabase Studio (Table Editor → eventos).
+        {rows.length} eventos. Editá lo basico desde acá; campos avanzados (imagen, descripcion larga) aún se editan en Supabase Studio.
       </p>
       <div className="overflow-x-auto rounded-xl" style={{ background: "var(--paper)", border: "1px solid var(--border-soft)" }}>
         <table className="w-full" style={{ fontSize: 13 }}>
@@ -941,46 +1009,229 @@ function EventosAdmin() {
             </tr>
           </thead>
           <tbody>
-            {rows.map((r) => (
-              <tr key={r.id} style={{ borderTop: "1px solid var(--border-soft)" }}>
-                <td className="p-3 font-inter-tight" style={{ color: "var(--ink)" }}>
-                  <div style={{ fontWeight: 600 }}>{r.titulo}</div>
-                  <div style={{ fontSize: 11, color: "var(--muted)" }}>{r.lugar} {r.hora && `· ${r.hora.slice(0, 5)}`}</div>
-                </td>
-                <td className="p-3 font-inter-tight" style={{ color: "var(--ink)" }}>{r.categoria}</td>
-                <td className="p-3 font-inter-tight tabular" style={{ color: "var(--ink)" }}>{r.fecha}</td>
-                <td className="p-3">
-                  <button
-                    type="button"
-                    onClick={() => togglePublicado(r)}
-                    className="font-inter-tight inline-flex items-center gap-1 rounded-full"
-                    style={{
-                      background: r.publicado ? "rgba(63,123,71,0.15)" : "rgba(31,26,20,0.08)",
-                      color: r.publicado ? "var(--valley-mid)" : "var(--muted)",
-                      padding: "4px 10px",
-                      fontSize: 11,
-                      fontWeight: 700,
-                      border: "none",
-                    }}
-                  >
-                    {r.publicado ? "Publicado" : "Oculto"}
-                  </button>
-                </td>
-                <td className="p-3">
-                  <button
-                    type="button"
-                    onClick={() => eliminar(r)}
-                    aria-label="Borrar"
-                    className="rounded-lg p-2"
-                    style={{ background: "var(--cream)", border: "1px solid var(--border-soft)", color: "var(--terracotta)" }}
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </td>
-              </tr>
-            ))}
+            {rows.map((r) => {
+              const fechaEv = new Date(r.fecha + "T00:00:00");
+              const esPasado = fechaEv.getTime() < hoy.getTime();
+              const estadoLabel = esPasado ? "Pasado" : r.publicado ? "Publicado" : "Oculto";
+              const estadoBg = esPasado
+                ? "rgba(120,53,15,0.10)"
+                : r.publicado
+                ? "rgba(63,123,71,0.15)"
+                : "rgba(31,26,20,0.08)";
+              const estadoColor = esPasado
+                ? "var(--terracotta)"
+                : r.publicado
+                ? "var(--valley-mid)"
+                : "var(--muted)";
+              return (
+                <tr key={r.id} style={{ borderTop: "1px solid var(--border-soft)" }}>
+                  <td className="p-3 font-inter-tight" style={{ color: "var(--ink)" }}>
+                    <div style={{ fontWeight: 600 }}>{r.titulo}</div>
+                    <div style={{ fontSize: 11, color: "var(--muted)" }}>{r.lugar} {r.hora && `· ${r.hora.slice(0, 5)}`}</div>
+                  </td>
+                  <td className="p-3 font-inter-tight" style={{ color: "var(--ink)" }}>{r.categoria}</td>
+                  <td className="p-3 font-inter-tight tabular" style={{ color: "var(--ink)" }}>{r.fecha}</td>
+                  <td className="p-3">
+                    <button
+                      type="button"
+                      onClick={() => !esPasado && togglePublicado(r)}
+                      disabled={esPasado}
+                      className="font-inter-tight inline-flex items-center gap-1 rounded-full"
+                      style={{
+                        background: estadoBg,
+                        color: estadoColor,
+                        padding: "4px 10px",
+                        fontSize: 11,
+                        fontWeight: 700,
+                        border: "none",
+                        cursor: esPasado ? "default" : "pointer",
+                      }}
+                    >
+                      {estadoLabel}
+                    </button>
+                  </td>
+                  <td className="p-3">
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setEditing(r)}
+                        aria-label="Editar"
+                        className="rounded-lg p-2"
+                        style={{ background: "var(--cream)", border: "1px solid var(--border-soft)", color: "var(--ink)" }}
+                      >
+                        <Pencil size={14} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => eliminar(r)}
+                        aria-label="Borrar"
+                        className="rounded-lg p-2"
+                        style={{ background: "var(--cream)", border: "1px solid var(--border-soft)", color: "var(--terracotta)" }}
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
+      </div>
+      {editing && (
+        <EventoEditor
+          row={editing}
+          onClose={() => setEditing(null)}
+          onSaved={() => {
+            setEditing(null);
+            reload();
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+// ─── Editor inline de evento (modal) ────────────────────────────────────────
+
+function EventoEditor({
+  row,
+  onClose,
+  onSaved,
+}: {
+  row: EventoRow;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [titulo, setTitulo] = useState(row.titulo);
+  const [lugar, setLugar] = useState(row.lugar ?? "");
+  const [fecha, setFecha] = useState(row.fecha);
+  const [hora, setHora] = useState(row.hora ?? "");
+  const [categoria, setCategoria] = useState(row.categoria);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function guardar() {
+    if (!supabase) return;
+    setSaving(true);
+    setError(null);
+    const { error: err } = await supabase
+      .from("eventos")
+      .update({
+        titulo: titulo.trim(),
+        lugar: lugar.trim() || null,
+        fecha,
+        hora: hora || null,
+        categoria,
+      })
+      .eq("id", row.id);
+    setSaving(false);
+    if (err) {
+      setError(err.message);
+      return;
+    }
+    onSaved();
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: "rgba(31,26,20,0.6)" }}
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-lg overflow-hidden rounded-2xl"
+        style={{ background: "var(--cream)", border: "1px solid var(--border)" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--border-soft)" }}>
+          <h3 className="font-fraunces" style={{ fontSize: 18, fontWeight: 600, color: "var(--ink)" }}>
+            Editar evento
+          </h3>
+          <p className="font-inter-tight" style={{ fontSize: 12, color: "var(--muted)" }}>
+            Slug: {row.slug}
+          </p>
+        </div>
+        <div className="flex flex-col gap-3 p-5">
+          <label className="font-inter-tight" style={{ fontSize: 12, fontWeight: 700, color: "var(--ink)" }}>
+            Título
+            <input
+              value={titulo}
+              onChange={(e) => setTitulo(e.target.value)}
+              className="mt-1 w-full rounded-lg"
+              style={{ background: "var(--paper)", border: "1px solid var(--border)", padding: "8px 12px", fontSize: 14, fontWeight: 400 }}
+            />
+          </label>
+          <label className="font-inter-tight" style={{ fontSize: 12, fontWeight: 700, color: "var(--ink)" }}>
+            Lugar
+            <input
+              value={lugar}
+              onChange={(e) => setLugar(e.target.value)}
+              className="mt-1 w-full rounded-lg"
+              style={{ background: "var(--paper)", border: "1px solid var(--border)", padding: "8px 12px", fontSize: 14, fontWeight: 400 }}
+            />
+          </label>
+          <div className="grid grid-cols-2 gap-3">
+            <label className="font-inter-tight" style={{ fontSize: 12, fontWeight: 700, color: "var(--ink)" }}>
+              Fecha
+              <input
+                type="date"
+                value={fecha}
+                onChange={(e) => setFecha(e.target.value)}
+                className="mt-1 w-full rounded-lg"
+                style={{ background: "var(--paper)", border: "1px solid var(--border)", padding: "8px 12px", fontSize: 14, fontWeight: 400 }}
+              />
+            </label>
+            <label className="font-inter-tight" style={{ fontSize: 12, fontWeight: 700, color: "var(--ink)" }}>
+              Hora
+              <input
+                type="time"
+                value={hora}
+                onChange={(e) => setHora(e.target.value)}
+                className="mt-1 w-full rounded-lg"
+                style={{ background: "var(--paper)", border: "1px solid var(--border)", padding: "8px 12px", fontSize: 14, fontWeight: 400 }}
+              />
+            </label>
+          </div>
+          <label className="font-inter-tight" style={{ fontSize: 12, fontWeight: 700, color: "var(--ink)" }}>
+            Categoría
+            <select
+              value={categoria}
+              onChange={(e) => setCategoria(e.target.value)}
+              className="mt-1 w-full rounded-lg"
+              style={{ background: "var(--paper)", border: "1px solid var(--border)", padding: "8px 12px", fontSize: 14, fontWeight: 400 }}
+            >
+              {["musica", "gastro", "cultura", "deporte", "naturaleza", "tradicional"].map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </label>
+          {error && (
+            <p className="font-inter-tight" style={{ fontSize: 12, color: "var(--terracotta)" }}>
+              {error}
+            </p>
+          )}
+        </div>
+        <div className="flex justify-end gap-2 px-5 py-4" style={{ borderTop: "1px solid var(--border-soft)" }}>
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={saving}
+            className="font-inter-tight rounded-lg"
+            style={{ background: "var(--cream)", border: "1px solid var(--border)", color: "var(--ink)", padding: "8px 16px", fontSize: 13, fontWeight: 700 }}
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={guardar}
+            disabled={saving || !titulo.trim() || !fecha}
+            className="font-inter-tight rounded-lg"
+            style={{ background: "var(--valley)", border: "none", color: "var(--cream)", padding: "8px 16px", fontSize: 13, fontWeight: 700 }}
+          >
+            {saving ? "Guardando…" : "Guardar"}
+          </button>
+        </div>
       </div>
     </div>
   );
