@@ -36,10 +36,22 @@ export const KEYWORDS_INSCRIPCION = [
 ];
 
 export const KEYWORDS_PICADAS = [
+  // comer
   "hambre", "donde comer", "dónde comer", "comer", "picada", "almuerzo",
-  "restoran", "restaurant", "parrilla", "comida", "datos",
-  "chicha", "chichería", "dulce", "empolvado", "alfajor",
-  "feria", "gastronomia", "gastronomía", "que hay", "qué hay",
+  "restoran", "restaurant", "parrilla", "comida", "datos", "marisco",
+  "pescado", "erizo", "loco", "empanada", "pasada", "kuchen",
+  // viñas / chicha (corredor Casablanca + Curacaví)
+  "chicha", "chichería", "vino", "viña", "vina", "cata", "espumante", "tour",
+  "moscatel", "carmenere", "cabernet", "sauvignon",
+  // dulces
+  "dulce", "empolvado", "alfajor", "panaderia", "panadería", "pan",
+  // ferias
+  "feria", "feria libre", "mote con huesillo",
+  // panoramas / cultura corredor
+  "panorama", "paseo", "playa", "caleta", "mirador", "trekking",
+  "naturaleza", "museo", "neruda", "ascensor", "santuario", "patrimonio",
+  // genéricos
+  "gastronomia", "gastronomía", "que hay", "qué hay", "donde", "dónde",
 ];
 
 // ─── Keywords de locales o tipos de comida NO verificados en Curacaví ──────────
