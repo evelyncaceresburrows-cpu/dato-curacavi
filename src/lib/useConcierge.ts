@@ -153,7 +153,9 @@ async function consultarGemini(
   ];
 
   const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+    // gemini-flash-latest: el alias estable que apunta al ultimo Flash con
+    // tier gratis activo. gemini-2.0-flash devolvia cuota 0 en cuentas free.
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
