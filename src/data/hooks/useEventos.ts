@@ -129,5 +129,10 @@ export function useEventos() {
     staleTime: 5 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
     initialData: ordenarEventos(EVENTOS),
+    // Mismo fix que useComercios: sin esto la semilla queda "fresca" para
+    // siempre y nunca se llama a fetchEventos -> la agenda muestra los
+    // eventos del seed local en vez de los reales de Supabase.
+    initialDataUpdatedAt: 0,
+    refetchOnMount: "always",
   });
 }
