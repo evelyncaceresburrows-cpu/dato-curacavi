@@ -1,206 +1,252 @@
 /**
  * PicadasSkill.tsx
- * Skill: RecomendadorDePicadas
+ * Skill: RecomendadorDePicadas (Tu copiloto del 68)
  *
- * Disparador: "hambre", "donde comer", "chicha", "dulces", etc.
- * Lógica:
- *   1. Filtra COMERCIOS_SEMILLA por `verificado === true`
- *   2. Ordena: pros primero (es_pro), luego por categoría coincidente
- *   3. Prioriza socios — "Dulces Issa" encabeza en categoría dulces
+ * Disparador: "hambre", "donde comer", "chicha", "dulces", "vino", etc.
+ * Lee comercios reales de Supabase via useComercios — antes leía sólo el
+ * seed `COMERCIOS_SEMILLA` con 12 locales hardcoded de Curacaví. Ahora
+ * recomienda del corredor entero (Pudahuel → Valpo, ~50 comercios).
  *
- * UI: Tarjetas con estilo de etiqueta artesanal (papel crema,
- *     trazo fino, sello verde parral).
+ * UI: tarjetas con comuna, rating, precio (con flag aprox si estimado),
+ * botón llamar y link a la ficha. Filtros por categoría y por comuna.
  */
 
+import React from "react";
 import { Phone, MapPin, BadgeCheck, Star, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
-import { COMERCIOS_SEMILLA } from "../lib/mockData";
-import { CATEGORIAS } from "../lib/types";
-import type { Comercio, CategoriaComercio } from "../lib/types";
+import { useComercios } from "@/data/hooks/useComercios";
+import type { Comercio, Categoria } from "@/data/seed";
 
-// ─── Colores por categoría ────────────────────────────────────────────────────
-const CATEGORIA_STYLE: Record<
-  CategoriaComercio,
-  { bg: string; text: string; border: string; dot: string }
-> = {
-  picadas: {
-    bg: "bg-parral-50",
-    text: "text-parral-700",
-    border: "border-parral-200",
-    dot: "bg-parral-400",
-  },
-  dulces: {
-    bg: "bg-chicha-50",
-    text: "text-chicha-700",
-    border: "border-chicha-200",
-    dot: "bg-chicha",
-  },
-  chicha: {
-    bg: "bg-amber-50",
-    text: "text-amber-700",
-    border: "border-amber-200",
-    dot: "bg-amber-400",
-  },
-  tramites: {
-    bg: "bg-blue-50",
-    text: "text-blue-700",
-    border: "border-blue-200",
-    dot: "bg-blue-400",
-  },
-  emergencias: {
-    bg: "bg-red-50",
-    text: "text-red-700",
-    border: "border-red-200",
-    dot: "bg-red-400",
-  },
+// ─── Mapeo categoría → label + emoji ────────────────────────────────────────
+const CATEGORIA_LABEL: Record<Categoria, { label: string; emoji: string; tono: string }> = {
+  picadas:        { label: "Picadas",        emoji: "🍽️", tono: "var(--valley)" },
+  dulces:         { label: "Dulces",         emoji: "🍪", tono: "var(--terracotta)" },
+  chicha:         { label: "Viñas/Chicha",   emoji: "🍇", tono: "var(--valley-mid)" },
+  panoramas:      { label: "Panoramas",      emoji: "🌄", tono: "var(--sun)" },
+  servicios:      { label: "Servicios",      emoji: "🛠️", tono: "var(--ink-soft)" },
+  tramites:       { label: "Trámites",       emoji: "🏛️", tono: "var(--ink-soft)" },
+  emprendimientos:{ label: "Emprendimientos",emoji: "🌱", tono: "var(--field)" },
+  alojamientos:   { label: "Alojamientos",   emoji: "🛏️", tono: "var(--valley)" },
+  cultura:        { label: "Cultura",        emoji: "🎨", tono: "var(--terracotta)" },
+  emergencias:    { label: "Emergencias",    emoji: "🚨", tono: "var(--terracotta-deep)" },
 };
 
-// ─── Filtro + ordenamiento ────────────────────────────────────────────────────
-function filtrarPicadas(categoriaFiltro?: CategoriaComercio): Comercio[] {
-  const verificados = COMERCIOS_SEMILLA.filter(
-    (c) =>
-      c.verificado &&
-      c.categoria !== "emergencias" &&
-      (categoriaFiltro ? c.categoria === categoriaFiltro : true)
-  );
+const COMUNA_LABEL: Record<string, string> = {
+  pudahuel: "Pudahuel",
+  curacavi: "Curacaví",
+  maria_pinto: "María Pinto",
+  casablanca: "Casablanca",
+  algarrobo: "Algarrobo",
+  quintay: "Quintay",
+  placilla: "Placilla",
+  valparaiso: "Valparaíso",
+};
 
-  // Ordenar: pros primero, luego por nombre (Dulces Issa primero en dulces)
-  return verificados.sort((a, b) => {
-    if (a.es_pro !== b.es_pro) return a.es_pro ? -1 : 1;
-    // Prioridad editorial: Dulces Issa siempre primero
-    if (a.nombre === "Dulces Issa") return -1;
-    if (b.nombre === "Dulces Issa") return 1;
-    return a.nombre.localeCompare(b.nombre);
+// ─── Filtros disponibles ────────────────────────────────────────────────────
+const FILTROS_CATEGORIA: { key: Categoria | "todas"; label: string }[] = [
+  { key: "todas",     label: "🗺️ Todas" },
+  { key: "picadas",   label: "🍽️ Picadas" },
+  { key: "dulces",    label: "🍪 Dulces" },
+  { key: "chicha",    label: "🍇 Viñas" },
+  { key: "panoramas", label: "🌄 Panoramas" },
+  { key: "cultura",   label: "🎨 Cultura" },
+];
+
+const FILTROS_COMUNA: { key: string; label: string }[] = [
+  { key: "todas",      label: "Todas" },
+  { key: "curacavi",   label: "Curacaví" },
+  { key: "casablanca", label: "Casablanca" },
+  { key: "algarrobo",  label: "Algarrobo" },
+  { key: "quintay",    label: "Quintay" },
+  { key: "valparaiso", label: "Valparaíso" },
+];
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
+const fmtClp = (v: number, estimado: boolean) =>
+  v === 0 ? "Gratis" : `${estimado ? "aprox " : ""}$${v.toLocaleString("es-CL")}`;
+
+interface ComercioConRuta extends Comercio {
+  comuna_id?: string;
+  precio_clp_aprox?: number;
+  precio_es_estimado?: boolean;
+}
+
+function ordenar(lista: ComercioConRuta[]): ComercioConRuta[] {
+  return [...lista].sort((a, b) => {
+    // 1. Socio Pro primero
+    const proA = a.estado === "socio_pro" ? 0 : 1;
+    const proB = b.estado === "socio_pro" ? 0 : 1;
+    if (proA !== proB) return proA - proB;
+    // 2. Rating descendente
+    return (b.rating ?? 0) - (a.rating ?? 0);
   });
 }
 
-// ─── Tarjeta artesanal ────────────────────────────────────────────────────────
-function TarjetaPicada({ comercio }: { comercio: Comercio }) {
-  const categoriaInfo = CATEGORIAS.find((c) => c.key === comercio.categoria);
-  const estilo = CATEGORIA_STYLE[comercio.categoria];
+// ─── Tarjeta ────────────────────────────────────────────────────────────────
+function TarjetaComercio({ c }: { c: ComercioConRuta }) {
+  const cat = CATEGORIA_LABEL[c.categoria] ?? CATEGORIA_LABEL.picadas;
+  const comuna = c.comuna_id ? COMUNA_LABEL[c.comuna_id] ?? c.comuna_id : null;
+  const isPro = c.estado === "socio_pro";
+  const tieneFoto = c.imagen?.startsWith("http");
 
   return (
-    <div
-      className={`
-        relative overflow-hidden rounded-md border bg-white transition-all
-        duration-200 hover:-translate-y-0.5 hover:shadow-md
-        ${estilo.border}
-      `}
+    <Link
+      to={`/lugar/${c.slug}`}
+      className="group block overflow-hidden rounded-xl border bg-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+      style={{ borderColor: "var(--border)" }}
     >
-      {/* Acento superior — cinta de categoría */}
-      <div className={`h-0.5 w-full ${estilo.dot}`} />
+      {/* Foto */}
+      {tieneFoto && (
+        <div
+          style={{
+            height: 80,
+            background: `url("${c.imagen}") center/cover no-repeat`,
+          }}
+          aria-hidden
+        />
+      )}
 
       <div className="p-3">
-        {/* Header: nombre + badge pro */}
+        {/* Header: nombre + Pro badge */}
         <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <h4 className="font-display text-sm font-bold leading-tight text-tierra-900 truncate">
-                {comercio.nombre}
-              </h4>
-              {comercio.es_pro && (
-                <span className="inline-flex items-center gap-0.5 rounded-full bg-chicha-50 px-1.5 py-0.5 shrink-0">
-                  <Star size={9} fill="#D97706" strokeWidth={0} className="text-chicha" />
-                  <span className="text-[9px] font-bold uppercase tracking-wide text-chicha-700">
-                    Socio
-                  </span>
+          <div className="min-w-0 flex-1">
+            <h4 className="font-fraunces text-sm font-bold leading-tight truncate" style={{ color: "var(--ink)" }}>
+              {c.nombre}
+            </h4>
+            <div className="mt-0.5 flex items-center gap-1.5 flex-wrap">
+              <span
+                className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider"
+                style={{ background: cat.tono, color: "var(--cream)" }}
+              >
+                {cat.emoji} {cat.label}
+              </span>
+              {comuna && (
+                <span className="text-[10px]" style={{ color: "var(--muted)" }}>
+                  · {comuna}
                 </span>
               )}
             </div>
-
-            {/* Categoría pill */}
-            <span
-              className={`mt-0.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider ${estilo.bg} ${estilo.text}`}
-            >
-              <span className={`h-1.5 w-1.5 rounded-full ${estilo.dot}`} />
-              {categoriaInfo?.label ?? comercio.categoria}
-            </span>
           </div>
 
-          {/* Verificado */}
-          {comercio.verificado && (
+          {isPro && (
+            <span className="inline-flex items-center gap-0.5 shrink-0 rounded-full px-1.5 py-0.5"
+              style={{ background: "var(--sun)", color: "var(--ink)" }}>
+              <Star size={9} fill="currentColor" strokeWidth={0} />
+              <span className="text-[9px] font-bold uppercase">Socio</span>
+            </span>
+          )}
+        </div>
+
+        {/* Subtitulo / descripción corta */}
+        {c.subtitulo && (
+          <p className="mt-1.5 text-[11px] leading-relaxed line-clamp-2" style={{ color: "var(--muted)" }}>
+            {c.subtitulo}
+          </p>
+        )}
+
+        {/* Meta: rating + precio */}
+        <div className="mt-2 flex items-center gap-2 flex-wrap text-[10px]" style={{ color: "var(--muted)" }}>
+          {c.rating > 0 && (
+            <span className="inline-flex items-center gap-0.5">
+              <Star size={9} fill="var(--sun)" strokeWidth={0} />
+              <span className="font-bold" style={{ color: "var(--ink)" }}>{c.rating.toFixed(1)}</span>
+              <span>({c.reviews})</span>
+            </span>
+          )}
+          {(c as ComercioConRuta).precio_clp_aprox !== undefined && (
+            <span className="inline-flex items-center">
+              {fmtClp(
+                (c as ComercioConRuta).precio_clp_aprox ?? 0,
+                (c as ComercioConRuta).precio_es_estimado !== false
+              )}
+            </span>
+          )}
+          {c.estado !== "por_confirmar" && (
             <BadgeCheck
-              size={16}
-              strokeWidth={1.5}
-              className="shrink-0 text-parral-400 mt-0.5"
-              aria-label="Verificado en terreno"
+              size={11}
+              strokeWidth={2}
+              style={{ color: "var(--valley-mid)" }}
+              aria-label="Verificado"
             />
           )}
         </div>
 
-        {/* Descripción */}
-        <p className="mt-1.5 font-serif text-[11px] italic leading-relaxed text-tierra-700 line-clamp-2">
-          {comercio.descripcion_vecina}
-        </p>
-
-        {/* Dirección */}
-        {comercio.direccion && (
-          <div className="mt-2 flex items-start gap-1 text-[10px] text-tierra-400">
-            <MapPin size={10} strokeWidth={1.5} className="mt-0.5 shrink-0" />
-            <span className="leading-tight line-clamp-1">{comercio.direccion}</span>
-          </div>
-        )}
-
-        {/* Teléfono — acción principal */}
-        {comercio.telefono && (
-          <a
-            href={`tel:${comercio.telefono.replace(/\s/g, "")}`}
-            className={`
-              mt-2 flex items-center gap-1.5 rounded-md px-2.5 py-1.5
-              text-[11px] font-bold transition-colors
-              ${estilo.bg} ${estilo.text} hover:opacity-80
-            `}
-            aria-label={`Llamar ${comercio.nombre}`}
-          >
-            <Phone size={11} strokeWidth={2.5} />
-            {comercio.telefono}
-          </a>
-        )}
+        {/* Acciones */}
+        <div className="mt-2 flex items-center gap-1.5">
+          {c.telefono && (
+            <a
+              href={`tel:${c.telefono.replace(/\s/g, "")}`}
+              onClick={(e) => e.stopPropagation()}
+              className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-bold transition-colors"
+              style={{ background: "var(--valley)", color: "var(--cream)" }}
+              aria-label={`Llamar ${c.nombre}`}
+            >
+              <Phone size={10} strokeWidth={2.5} />
+              Llamar
+            </a>
+          )}
+          <span className="inline-flex items-center gap-0.5 text-[10px] font-bold ml-auto" style={{ color: "var(--terracotta)" }}>
+            Ver ficha
+            <ChevronRight size={10} strokeWidth={2.5} />
+          </span>
+        </div>
       </div>
-    </div>
+    </Link>
   );
 }
 
-// ─── Filtros de categoría ─────────────────────────────────────────────────────
-const FILTROS: { key: CategoriaComercio | "todas"; label: string }[] = [
-  { key: "todas", label: "🗺️ Todas" },
-  { key: "picadas", label: "🍽️ Picadas" },
-  { key: "dulces", label: "🍪 Dulces" },
-  { key: "chicha", label: "🍇 Chicha" },
-  { key: "tramites", label: "🏛️ Trámites" },
-];
-
-// ─── Skill principal ──────────────────────────────────────────────────────────
+// ─── Skill ──────────────────────────────────────────────────────────────────
 interface Props {
-  categoriaInicial?: CategoriaComercio;
+  /** Categoría inicial (cuando el copiloto detecta "vino" → chicha, etc.). */
+  categoriaInicial?: Categoria;
   onCerrar?: () => void;
 }
 
 export default function PicadasSkill({ categoriaInicial, onCerrar }: Props) {
-  const [categoriaActiva, setCategoriaActiva] = React.useState<
-    CategoriaComercio | "todas"
-  >(categoriaInicial ?? "todas");
-
-  const picadas = filtrarPicadas(
-    categoriaActiva === "todas" ? undefined : categoriaActiva
+  const { data: comercios = [] } = useComercios();
+  const [catActiva, setCatActiva] = React.useState<Categoria | "todas">(
+    categoriaInicial ?? "todas"
   );
+  const [comunaActiva, setComunaActiva] = React.useState<string>("todas");
+
+  // Filtra por categoría + comuna + estado verificado/socio_pro (saca por_confirmar y emergencias).
+  const filtrados = React.useMemo(() => {
+    const lista = (comercios as ComercioConRuta[]).filter((c) => {
+      if (c.estado === "por_confirmar") return false;
+      if (c.categoria === "emergencias") return false;
+      if (catActiva !== "todas" && c.categoria !== catActiva) return false;
+      if (comunaActiva !== "todas" && c.comuna_id !== comunaActiva) return false;
+      return true;
+    });
+    return ordenar(lista).slice(0, 24);
+  }, [comercios, catActiva, comunaActiva]);
 
   return (
-    <div className="mx-3 mb-3 overflow-hidden rounded-md border border-tierra-100 bg-white shadow-md">
+    <div
+      className="mx-3 mb-3 overflow-hidden rounded-2xl shadow-md"
+      style={{
+        background: "var(--cream)",
+        border: "1px solid var(--border)",
+      }}
+    >
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-tierra-100 bg-crema-100 px-4 py-2.5">
+      <div
+        className="flex items-center justify-between px-4 py-2.5"
+        style={{ background: "var(--paper)", borderBottom: "1px solid var(--border)" }}
+      >
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-wider text-tierra-700">
-            Recomendados del Valle
+          <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: "var(--ink)" }}>
+            Recomendados del corredor
           </p>
-          <p className="text-[10px] text-tierra-400">
-            {picadas.length} verificados en terreno
+          <p className="text-[10px]" style={{ color: "var(--muted)" }}>
+            {filtrados.length} verificados · ruta 68
           </p>
         </div>
         {onCerrar && (
           <button
             onClick={onCerrar}
-            className="rounded-full p-1 text-tierra-300 hover:text-tierra-600"
+            className="rounded-full p-1 transition-colors"
+            style={{ color: "var(--muted)" }}
             aria-label="Cerrar recomendador"
           >
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
@@ -210,53 +256,80 @@ export default function PicadasSkill({ categoriaInicial, onCerrar }: Props) {
         )}
       </div>
 
-      {/* Filtros de categoría */}
-      <div className="flex gap-1.5 overflow-x-auto px-3 py-2 scrollbar-none">
-        {FILTROS.map((f) => (
+      {/* Filtros categoría */}
+      <div className="flex gap-1.5 overflow-x-auto px-3 py-2 no-scrollbar">
+        {FILTROS_CATEGORIA.map((f) => (
           <button
             key={f.key}
-            onClick={() => setCategoriaActiva(f.key as CategoriaComercio | "todas")}
-            className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold transition-colors ${
-              categoriaActiva === f.key
-                ? "bg-parral-700 text-crema"
-                : "border border-tierra-200 bg-white text-tierra-600 hover:border-parral-200 hover:text-parral-700"
-            }`}
+            onClick={() => setCatActiva(f.key as Categoria | "todas")}
+            className="shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold transition-colors"
+            style={{
+              background: catActiva === f.key ? "var(--valley)" : "var(--cream)",
+              color: catActiva === f.key ? "var(--cream)" : "var(--ink)",
+              border: `1px solid ${catActiva === f.key ? "var(--valley)" : "var(--border)"}`,
+            }}
           >
             {f.label}
           </button>
         ))}
       </div>
 
-      {/* Grid de tarjetas */}
+      {/* Filtros comuna */}
+      <div className="flex gap-1.5 overflow-x-auto px-3 pb-2 no-scrollbar">
+        {FILTROS_COMUNA.map((f) => (
+          <button
+            key={f.key}
+            onClick={() => setComunaActiva(f.key)}
+            className="shrink-0 rounded-full px-2 py-0.5 text-[9px] font-bold transition-colors"
+            style={{
+              background: comunaActiva === f.key ? "var(--terracotta)" : "transparent",
+              color: comunaActiva === f.key ? "var(--cream)" : "var(--muted)",
+              border: `1px solid ${comunaActiva === f.key ? "var(--terracotta)" : "var(--border)"}`,
+            }}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Grid */}
       <div className="max-h-[340px] overflow-y-auto px-3 pb-3">
-        {picadas.length === 0 ? (
-          <div className="py-8 px-4 text-center">
-            <p className="font-serif text-[11px] italic leading-relaxed text-tierra-700">
-              "Mire vecino, ese dato no lo tengo verificado todavía, pero puede probar en la **Avenida O'Higgins** — es el eje comercial del valle y ahí encuentra de todo."
+        {filtrados.length === 0 ? (
+          <div className="py-6 px-4 text-center">
+            <p className="font-fraunces text-[12px] italic leading-relaxed" style={{ color: "var(--ink-soft)" }}>
+              "Mira vecino, en esa combinación no tengo nada verificado todavía. Probá ampliar la categoría o cambiar la comuna."
             </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            {picadas.map((c) => (
-              <TarjetaPicada key={c.id} comercio={c} />
+            {filtrados.map((c) => (
+              <TarjetaComercio key={c.id} c={c} />
             ))}
           </div>
         )}
       </div>
 
-      {/* Footer — link al directorio completo */}
-      <div className="border-t border-tierra-100 bg-crema-100 px-4 py-2.5">
+      {/* Footer */}
+      <div
+        className="flex items-center justify-between px-4 py-2.5"
+        style={{ background: "var(--paper)", borderTop: "1px solid var(--border)" }}
+      >
         <Link
           to="/directorio"
-          className="flex items-center gap-1 text-[11px] font-semibold text-parral-700 hover:underline"
+          className="flex items-center gap-1 text-[11px] font-bold"
+          style={{ color: "var(--terracotta)" }}
         >
           Ver directorio completo
           <ChevronRight size={11} strokeWidth={2.5} />
+        </Link>
+        <Link
+          to="/ruta"
+          className="flex items-center gap-1 text-[11px] font-bold"
+          style={{ color: "var(--valley)" }}
+        >
+          Armar ruta →
         </Link>
       </div>
     </div>
   );
 }
-
-// Necesitamos React en scope por useState arriba
-import React from "react";

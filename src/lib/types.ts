@@ -19,11 +19,15 @@ import {
 
 import type { Categoria as CategoriaCanonica } from "@/data/seed";
 
-// Taxonomía estrecha que usa el concierge (subset de Categoria canónica).
+// Taxonomía que usa el copiloto del 68. Antes era subset chico de Curacaví.
+// Ampliada para cubrir corredor completo: panoramas (caletas, miradores)
+// y cultura (museos, santuarios, ascensores Valpo).
 export type CategoriaComercio =
   | "picadas"
   | "dulces"
   | "chicha"
+  | "panoramas"
+  | "cultura"
   | "tramites"
   | "emergencias";
 
