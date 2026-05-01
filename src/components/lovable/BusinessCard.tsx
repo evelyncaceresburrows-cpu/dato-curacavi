@@ -64,7 +64,12 @@ function Foto({ comercio, className }: { comercio: Comercio; className?: string 
 
 export function BusinessCard({ comercio, onClick, variant = "list" }: Props) {
   const label = ETIQUETA_CATEGORIA[comercio.categoria] ?? comercio.categoria;
-  const abierto = !!comercio.abiertoHasta;
+  const estadoBadge: "abierto" | "siempre" | "desconocido" =
+    comercio.categoria === "emergencias"
+      ? "siempre"
+      : comercio.abiertoHasta
+      ? "abierto"
+      : "desconocido";
 
   if (variant === "grid") {
     return (
@@ -98,7 +103,7 @@ export function BusinessCard({ comercio, onClick, variant = "list" }: Props) {
             {comercio.nombre}
           </h3>
           <div className="mt-auto flex items-center justify-between gap-2 pt-1">
-            <OpenBadge open={abierto} />
+            <OpenBadge estado={estadoBadge} />
             <span className="tabular inline-flex items-center gap-1 text-[12px] font-medium text-foreground">
               <Star
                 className="h-3 w-3"
@@ -144,7 +149,7 @@ export function BusinessCard({ comercio, onClick, variant = "list" }: Props) {
           <span className="truncate">{comercio.direccion}</span>
         </p>
         <div className="mt-auto flex items-center justify-between gap-2 pt-2">
-          <OpenBadge open={abierto} />
+          <OpenBadge estado={estadoBadge} />
           <span className="tabular inline-flex items-center gap-1 text-[12px] font-medium text-foreground">
             <Star
               className="h-3 w-3"
