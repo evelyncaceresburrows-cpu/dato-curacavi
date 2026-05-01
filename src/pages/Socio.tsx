@@ -753,7 +753,13 @@ export default function Socio() {
             features={["Ficha básica", "Contacto visible", "Búsqueda por categoría"]}
             cta="Publicar gratis"
             tone="light"
-            onCta={() => track(Events.SOCIO_PRO_CTA, { plan: "presencia" })}
+            onCta={() => {
+              track(Events.SOCIO_PRO_CTA, { plan: "presencia" });
+              // Scroll al form de publicar (top de la pagina).
+              window.scrollTo({ top: 0, behavior: "smooth" });
+              // Si el toggle estaba en eventos, lo dejamos en negocio.
+              setActiveTab("negocio");
+            }}
           />
           <PlanCard
             titulo="Socio Pro"
@@ -769,7 +775,14 @@ export default function Socio() {
             cta="Conversar con el equipo"
             tone="dark"
             destacado
-            onCta={() => track(Events.SOCIO_PRO_CTA, { plan: "socio_pro" })}
+            onCta={() => {
+              track(Events.SOCIO_PRO_CTA, { plan: "socio_pro" });
+              const subject = encodeURIComponent("Quiero ser Socio Pro en Dato 68");
+              const body = encodeURIComponent(
+                "Hola, me interesa el plan Socio Pro ($9.900/mes). Mi negocio es:\n\nNombre:\nDirección:\nCategoría:\nTeléfono:\n\nGracias."
+              );
+              window.location.href = `mailto:evelyncaceresburrows@gmail.com?subject=${subject}&body=${body}`;
+            }}
           />
           <PlanCard
             titulo="Embajador"
@@ -782,7 +795,14 @@ export default function Socio() {
             ]}
             cta="Agendar reunión"
             tone="light"
-            onCta={() => track(Events.SOCIO_PRO_CTA, { plan: "embajador" })}
+            onCta={() => {
+              track(Events.SOCIO_PRO_CTA, { plan: "embajador" });
+              const subject = encodeURIComponent("Plan Embajador — Dato 68");
+              const body = encodeURIComponent(
+                "Hola, me interesa el plan Embajador. Quiero coordinar una reunión para conversar sobre:\n\nMi marca/organización:\nLocales o eventos:\nCantidad de fichas:\n\nMi disponibilidad:"
+              );
+              window.location.href = `mailto:evelyncaceresburrows@gmail.com?subject=${subject}&body=${body}`;
+            }}
           />
         </div>
       </section>
