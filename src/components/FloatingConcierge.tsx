@@ -1,6 +1,6 @@
 /**
  * FloatingConcierge.tsx
- * Botón flotante + panel del Concierge del Valle.
+ * Botón flotante + panel del Tu copiloto del 68.
  *
  * UX:
  * - Botón FAB en esquina inferior derecha (encima del tab bar mobile)
@@ -96,7 +96,7 @@ export default function FloatingConcierge() {
           maxHeight: "75dvh",
         }}
         role="dialog"
-        aria-label="Concierge del Valle"
+        aria-label="Tu copiloto del 68"
         aria-modal="true"
       >
         {/* Header del panel */}
@@ -119,10 +119,10 @@ export default function FloatingConcierge() {
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-fraunces" style={{ fontSize: 15, fontWeight: 600, letterSpacing: "-0.015em", lineHeight: 1.1 }}>
-              Concierge del Valle
+              Tu copiloto del 68
             </p>
             <p style={{ fontSize: 11, color: "rgba(245,240,230,0.7)" }}>
-              Vecino · Curacaví · Siempre disponible
+              Ruta 68 · Santiago → Valpo · Siempre disponible
             </p>
           </div>
           <button
@@ -131,7 +131,7 @@ export default function FloatingConcierge() {
             style={{ color: "var(--cream)", background: "transparent", border: "none", cursor: "pointer" }}
             onMouseEnter={(e) => (e.currentTarget.style.background = "var(--valley-mid)")}
             onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-            aria-label="Cerrar Concierge"
+            aria-label="Cerrar copiloto"
           >
             <ChevronDown size={18} strokeWidth={2} />
           </button>
@@ -166,7 +166,7 @@ export default function FloatingConcierge() {
           border: "none",
           cursor: "pointer",
         }}
-        aria-label={abierto ? "Cerrar Concierge" : "Abrir Concierge del Valle"}
+        aria-label={abierto ? "Cerrar copiloto" : "Abrir Tu copiloto del 68"}
         aria-expanded={abierto}
       >
         {/* Punto de notificación */}
@@ -197,7 +197,7 @@ export default function FloatingConcierge() {
               className="font-inter-tight hidden sm:inline"
               style={{ fontSize: 14, fontWeight: 600 }}
             >
-              Concierge del Valle
+              Tu copiloto del 68
             </span>
           </>
         )}

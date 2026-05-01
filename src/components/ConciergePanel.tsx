@@ -133,7 +133,7 @@ function IndicadorEscribiendo() {
       </div>
       <div className="flex items-center gap-1.5 rounded-2xl rounded-tl-sm border border-tierra-100 bg-crema px-4 py-3">
         <Loader2 size={14} className="animate-spin text-parral-700" strokeWidth={2} />
-        <span className="text-xs text-tierra-500">El Concierge está pensando…</span>
+        <span className="text-xs text-tierra-500">El copiloto está pensando…</span>
       </div>
     </div>
   );
@@ -266,7 +266,7 @@ export default function ConciergePanel({
             rows={1}
             className="flex-1 resize-none rounded-xl border border-tierra-200 bg-white px-3.5 py-2.5 text-sm text-tierra-900 placeholder-tierra-300 focus:border-parral focus:outline-none focus:ring-1 focus:ring-parral/30"
             style={{ maxHeight: "100px" }}
-            aria-label="Mensaje para el Concierge"
+            aria-label="Mensaje para el copiloto"
           />
 
           <button
