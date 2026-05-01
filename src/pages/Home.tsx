@@ -41,8 +41,15 @@ export default function Home() {
   const { data: comercios = [] } = useComercios();
   const { data: eventos = [] } = useEventos();
 
-  // Top 3 con mejor rating.
+  // Top 3 con mejor rating, SOLO categorias que un vecino "sale a visitar".
+  // Bomberos / Carabineros / Municipalidad / mecanica no van en destacados —
+  // se buscan cuando hace falta, no como panorama del dia.
+  const CATEGORIAS_DESTACADAS = new Set([
+    "picadas", "chicha", "dulces", "panoramas",
+    "cultura", "emprendimientos", "alojamientos",
+  ]);
   const destacados = [...comercios]
+    .filter((c) => CATEGORIAS_DESTACADAS.has(c.categoria))
     .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
     .slice(0, 3);
 
@@ -468,7 +475,13 @@ export default function Home() {
                   {c.subtitulo}
                 </div>
                 <StatusBadge
-                  estado={c.abiertoHasta ? "abierto" : "cerrado"}
+                  estado={
+                    c.categoria === "emergencias"
+                      ? "siempre"
+                      : c.abiertoHasta
+                      ? "abierto"
+                      : "cerrado"
+                  }
                   cierra={c.abiertoHasta}
                 />
               </div>

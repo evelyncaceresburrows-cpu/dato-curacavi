@@ -360,7 +360,13 @@ function ComercioRow({
               </span>
             )}
             <StatusBadge
-              estado={comercio.abiertoHasta ? "abierto" : "cerrado"}
+              estado={
+                comercio.categoria === "emergencias"
+                  ? "siempre"
+                  : comercio.abiertoHasta
+                  ? "abierto"
+                  : "cerrado"
+              }
               cierra={comercio.abiertoHasta}
             />
           </div>
